@@ -30,6 +30,8 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FeeReminderController;
 use App\Http\Controllers\FeeStructureController;
+use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SuperAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -210,5 +212,19 @@ Route::middleware(['auth'])->group(function () {
         // Fee Reminder
         Route::get('/fee-reminder', [FeeReminderController::class, 'index'])->name('fee-reminder.index');
         Route::post('/fee-reminder/send', [FeeReminderController::class, 'send'])->name('fee-reminder.send');
+    });
+
+    // White-Label Settings Module (Super Admin Only)
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingController::class, 'index'])->name('index');
+        Route::post('/update', [SettingController::class, 'update'])->name('update');
+        Route::get('/export-json', [SettingController::class, 'exportJson'])->name('export');
+        Route::post('/import-json', [SettingController::class, 'importJson'])->name('import');
+    });
+
+    // Super Admin Role Impersonation / Switching
+    Route::prefix('super-admin')->name('super-admin.')->group(function () {
+        Route::post('/switch-role', [SuperAdminController::class, 'switchRole'])->name('switch-role');
+        Route::post('/exit-impersonation', [SuperAdminController::class, 'exitImpersonation'])->name('exit-impersonation');
     });
 });

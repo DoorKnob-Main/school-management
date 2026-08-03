@@ -81,4 +81,49 @@ class User extends Authenticatable
     {
         return $this->hasMany(Mark::class, 'student_id', 'id');
     }
+
+    /**
+     * Determine if the user is a Super Admin.
+     *
+     * @return bool
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin' || $this->hasRole('super_admin');
+    }
+
+    /**
+     * Determine if the user is currently impersonating another role.
+     *
+     * @return bool
+     */
+    public function isImpersonating(): bool
+    {
+        return $this->isSuperAdmin() && session()->has('impersonated_role');
+    }
+
+    /**
+     * Get the effective role of the user (accounting for impersonation).
+     *
+     * @return string
+     */
+    public function getEffectiveRoleAttribute(): string
+    {
+        if ($this->isSuperAdmin() && session()->has('impersonated_role')) {
+            return session('impersonated_role');
+        }
+
+        return $this->role;
+    }
+
+    /**
+     * Determine if the user is an admin or super admin.
+     *
+     * @return bool
+     */
+    public function isAdminOrSuperAdmin(): bool
+    {
+        $role = $this->effective_role;
+        return $role === 'admin' || $role === 'super_admin' || $this->isSuperAdmin();
+    }
 }

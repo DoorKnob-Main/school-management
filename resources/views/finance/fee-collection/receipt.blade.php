@@ -8,21 +8,16 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
     <style>
         body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: {{ setting('background_color', '#f8f9fa') }};
+            font-family: {{ setting('font_family', "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif") }};
         }
         .receipt-card {
             max-width: 800px;
             margin: 30px auto;
             background: #fff;
             padding: 30px;
-            border-radius: 10px;
+            border-radius: {{ setting('card_radius', '10px') }};
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        }
-        .receipt-header {
-            border-bottom: 2px solid #0d6efd;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
         }
         @media print {
             body {
@@ -50,17 +45,13 @@
     </div>
 
     <div class="receipt-card">
-        <!-- School Header -->
-        <div class="receipt-header d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="fw-bold text-primary mb-1">{{config('app.name', 'Unifiedtransform')}}</h2>
-                <p class="text-muted mb-0">Official Fee Payment Receipt</p>
-            </div>
-            <div class="text-end">
-                <h4 class="fw-bold text-dark mb-0">{{$payment->receipt_number}}</h4>
-                <small class="text-muted">Date: {{date('d M Y', strtotime($payment->payment_date))}}</small>
-            </div>
-        </div>
+        <!-- Dynamic School Report Header -->
+        <x-report-header 
+            title="OFFICIAL FEE RECEIPT"
+            subtitle="Payment Confirmation Document"
+            :docNumber="$payment->receipt_number"
+            :date="date('d M Y', strtotime($payment->payment_date))" 
+        />
 
         <!-- Student & Academic Info -->
         <div class="row bg-light p-3 rounded mb-4 border">
@@ -78,7 +69,7 @@
 
         <!-- Payment Particulars Table -->
         <table class="table table-bordered align-middle mb-4">
-            <thead class="table-dark">
+            <thead class="table-dark" style="background-color: {{ setting('primary_color', '#0d6efd') }};">
                 <tr>
                     <th>Description</th>
                     <th>Payment Mode</th>
@@ -94,7 +85,7 @@
                     </td>
                     <td><span class="badge bg-info text-dark">{{$payment->payment_mode}}</span></td>
                     <td>{{$payment->reference_number ?? 'N/A'}}</td>
-                    <td class="text-end fs-5 fw-bold text-success">₹{{number_format($payment->amount, 2)}}</td>
+                    <td class="text-end fs-5 fw-bold text-success">{{ setting('currency_symbol', '₹') }}{{number_format($payment->amount, 2)}}</td>
                 </tr>
             </tbody>
         </table>
@@ -104,32 +95,26 @@
             <div class="col-6">
                 <div class="p-3 border rounded bg-light">
                     <h6><i class="bi bi-info-circle"></i> Fee Account Overview</h6>
-                    <small class="d-block">Total Allocated Fee: <strong>₹{{number_format($summary['total_fee'], 2)}}</strong></small>
-                    <small class="d-block text-success">Total Amount Paid: <strong>₹{{number_format($summary['paid_amount'], 2)}}</strong></small>
-                    <small class="d-block text-danger">Remaining Balance Due: <strong>₹{{number_format($summary['remaining_due'], 2)}}</strong></small>
+                    <small class="d-block">Total Allocated Fee: <strong>{{ setting('currency_symbol', '₹') }}{{number_format($summary['total_fee'], 2)}}</strong></small>
+                    <small class="d-block text-success">Total Amount Paid: <strong>{{ setting('currency_symbol', '₹') }}{{number_format($summary['paid_amount'], 2)}}</strong></small>
+                    <small class="d-block text-danger">Remaining Balance Due: <strong>{{ setting('currency_symbol', '₹') }}{{number_format($summary['remaining_due'], 2)}}</strong></small>
                 </div>
             </div>
             <div class="col-6 text-end">
                 <div class="p-3 border rounded bg-light">
                     <p class="mb-1 text-muted">Amount in words:</p>
-                    <h6 class="fst-italic text-capitalize">Rupees {{number_format($payment->amount, 2)}} Only</h6>
+                    <h6 class="fst-italic text-capitalize">{{ setting('default_currency', 'INR') }} {{number_format($payment->amount, 2)}} Only</h6>
                     <hr>
-                    <h5 class="fw-bold">Total Paid: ₹{{number_format($payment->amount, 2)}}</h5>
+                    <h5 class="fw-bold">Total Paid: {{ setting('currency_symbol', '₹') }}{{number_format($payment->amount, 2)}}</h5>
                 </div>
             </div>
         </div>
 
-        <!-- Signature & Footer -->
-        <div class="row pt-4 mt-4 border-top">
-            <div class="col-6">
-                <p class="small text-muted mb-0">Issued by: {{$payment->creator->first_name ?? 'Admin'}} {{$payment->creator->last_name ?? ''}}</p>
-                <p class="small text-muted mb-0">Generated on: {{date('Y-m-d H:i:s')}}</p>
-            </div>
-            <div class="col-6 text-end">
-                <div style="border-bottom: 1px dashed #000; width: 180px; display: inline-block; margin-bottom: 5px;"></div>
-                <p class="small fw-bold mb-0">Authorized Signatory</p>
-            </div>
-        </div>
+        <!-- Dynamic Signature & Report Footer -->
+        <x-report-footer 
+            :issuedBy="($payment->creator->first_name ?? 'Admin') . ' ' . ($payment->creator->last_name ?? '')" 
+            :showSignature="true" 
+        />
     </div>
 </div>
 
