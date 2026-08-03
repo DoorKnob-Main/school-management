@@ -27,13 +27,16 @@ class StudentParentInfoRepository {
 
     public function update($request, $student_id) {
         try {
-            StudentParentInfo::where('student_id', $student_id)->update([
-                'father_name'   => $request['father_name'],
-                'father_phone'  => $request['father_phone'],
-                'mother_name'   => $request['mother_name'],
-                'mother_phone'  => $request['mother_phone'],
-                'parent_address'=> $request['parent_address'],
-            ]);
+            StudentParentInfo::updateOrCreate(
+                ['student_id' => $student_id],
+                [
+                    'father_name'   => $request['father_name'],
+                    'father_phone'  => $request['father_phone'],
+                    'mother_name'   => $request['mother_name'],
+                    'mother_phone'  => $request['mother_phone'],
+                    'parent_address'=> $request['parent_address'],
+                ]
+            );
         } catch (\Exception $e) {
             throw new \Exception('Failed to update Student Parent information. '.$e->getMessage());
         }

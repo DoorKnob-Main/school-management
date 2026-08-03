@@ -98,30 +98,30 @@
                                 </div>
                                 <div class="col-3">
                                     <label for="inputIdCardNumber" class="form-label">Id Card Number<sup><i class="bi bi-asterisk text-primary"></i></sup></label>
-                                    <input type="text" class="form-control" id="inputIdCardNumber" name="id_card_number" placeholder="e.g. 2021-03-01-02-01 (Year Semester Class Section Roll)" required value="{{$promotion_info->id_card_number}}">
+                                    <input type="text" class="form-control" id="inputIdCardNumber" name="id_card_number" placeholder="e.g. 2021-03-01-02-01 (Year Semester Class Section Roll)" required value="{{ $promotion_info->id_card_number ?? '' }}">
                                 </div>
                             </div>
                             <div class="row mt-4 g-3">
                                 <h6>Parents' Information</h6>
                                 <div class="col-3">
                                     <label for="inputFatherName" class="form-label">Father Name<sup><i class="bi bi-asterisk text-primary"></i></sup></label>
-                                    <input type="text" class="form-control" id="inputFatherName" name="father_name" placeholder="Father Name" required value="{{$parent_info->father_name}}">
+                                    <input type="text" class="form-control" id="inputFatherName" name="father_name" placeholder="Father Name" required value="{{ $parent_info->father_name ?? '' }}">
                                 </div>
                                 <div class="col-3">
                                     <label for="inputFatherPhone" class="form-label">Father's Phone<sup><i class="bi bi-asterisk text-primary"></i></sup></label>
-                                    <input type="text" class="form-control" id="inputFatherPhone" name="father_phone" placeholder="+880 01......" required value="{{$parent_info->father_phone}}">
+                                    <input type="text" class="form-control" id="inputFatherPhone" name="father_phone" placeholder="+880 01......" required value="{{ $parent_info->father_phone ?? '' }}">
                                 </div>
                                 <div class="col-3">
                                     <label for="inputMotherName" class="form-label">Mother Name<sup><i class="bi bi-asterisk text-primary"></i></sup></label>
-                                    <input type="text" class="form-control" id="inputMotherName" name="mother_name" placeholder="Mother Name" required value="{{$parent_info->mother_name}}">
+                                    <input type="text" class="form-control" id="inputMotherName" name="mother_name" placeholder="Mother Name" required value="{{ $parent_info->mother_name ?? '' }}">
                                 </div>
                                 <div class="col-3">
                                     <label for="inputMotherPhone" class="form-label">Mother's Phone<sup><i class="bi bi-asterisk text-primary"></i></sup></label>
-                                    <input type="text" class="form-control" id="inputMotherPhone" name="mother_phone" placeholder="+880 01......" required value="{{$parent_info->mother_phone}}">
+                                    <input type="text" class="form-control" id="inputMotherPhone" name="mother_phone" placeholder="+880 01......" required value="{{ $parent_info->mother_phone ?? '' }}">
                                 </div>
                                 <div class="col-4">
                                     <label for="inputParentAddress" class="form-label">Address<sup><i class="bi bi-asterisk text-primary"></i></sup></label>
-                                    <input type="text" class="form-control" id="inputParentAddress" name="parent_address" placeholder="634 Main St" required value="{{$parent_info->parent_address}}">
+                                    <input type="text" class="form-control" id="inputParentAddress" name="parent_address" placeholder="634 Main St" required value="{{ $parent_info->parent_address ?? '' }}">
                                 </div>
                             </div>
                             <div class="row mt-4">

@@ -1,3 +1,4 @@
+@auth
 <div class="col-xs-1 col-sm-1 col-md-1 col-lg-2 col-xl-2 col-xxl-2 border-rt-e6 px-0">
     <div class="d-flex flex-column align-items-center align-items-sm-start ">
                 <ul class="nav flex-column pt-2 w-100">
@@ -157,3 +158,4 @@
                 </ul>
             </div>
         </div>
+@endauth
