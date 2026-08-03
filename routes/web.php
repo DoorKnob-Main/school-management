@@ -24,6 +24,12 @@ use App\Http\Controllers\SchoolSessionController;
 use App\Http\Controllers\AcademicSettingController;
 use App\Http\Controllers\AssignedTeacherController;
 use App\Http\Controllers\Auth\UpdatePasswordController;
+use App\Http\Controllers\FeeCollectionController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\FeeReminderController;
+use App\Http\Controllers\FeeStructureController;
 
 /*
 |--------------------------------------------------------------------------
@@ -176,4 +182,33 @@ Route::middleware(['auth'])->group(function () {
     // Update password
     Route::get('password/edit', [UpdatePasswordController::class, 'edit'])->name('password.edit');
     Route::post('password/edit', [UpdatePasswordController::class, 'update'])->name('password.update');
+
+    // Finance Module
+    Route::prefix('finance')->name('finance.')->group(function () {
+        // Fee Collection & Receipts
+        Route::get('/fee-collection', [FeeCollectionController::class, 'index'])->name('fee-collection.index');
+        Route::post('/fee-collection/collect', [FeeCollectionController::class, 'collect'])->name('fee-collection.collect');
+        Route::get('/fee-collection/history/{student_id}', [FeeCollectionController::class, 'getHistory'])->name('fee-collection.history');
+        Route::get('/fee-collection/receipt/{id}', [FeeCollectionController::class, 'receipt'])->name('fee-collection.receipt');
+
+        // Fee Structure Configuration
+        Route::get('/fee-structure', [FeeStructureController::class, 'index'])->name('fee-structure.index');
+        Route::post('/fee-structure/store', [FeeStructureController::class, 'store'])->name('fee-structure.store');
+        Route::delete('/fee-structure/destroy/{id}', [FeeStructureController::class, 'destroy'])->name('fee-structure.destroy');
+
+        // Transactions Ledger
+        Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+
+        // Expenses
+        Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+        Route::post('/expenses/store', [ExpenseController::class, 'store'])->name('expenses.store');
+        Route::delete('/expenses/destroy/{id}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+
+        // Reports
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
+        // Fee Reminder
+        Route::get('/fee-reminder', [FeeReminderController::class, 'index'])->name('fee-reminder.index');
+        Route::post('/fee-reminder/send', [FeeReminderController::class, 'send'])->name('fee-reminder.send');
+    });
 });

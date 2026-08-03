@@ -183,6 +183,7 @@ return [
         App\Providers\CourseServiceProvider::class,
         App\Providers\UserServiceProvider::class,
         App\Providers\PurifySetupProvider::class,
+        App\Providers\FinanceServiceProvider::class,
     ],
 
     /*

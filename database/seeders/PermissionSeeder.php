@@ -99,6 +99,14 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'edit sections']);
         // Permission::create(['name' => 'delete sections']);
 
+        // Finance permissions
+        Permission::create(['name' => 'view payments']);
+        Permission::create(['name' => 'collect fees']);
+        Permission::create(['name' => 'manage expenses']);
+        Permission::create(['name' => 'view reports']);
+        Permission::create(['name' => 'view transactions']);
+        Permission::create(['name' => 'send fee reminder']);
+
         $user = \App\Models\User::factory()->create([
             'email' => 'admin@ut.com',
             'first_name' => 'Hasib',
@@ -159,7 +167,13 @@ class PermissionSeeder extends Seeder
             'view syllabi',
             'edit syllabi',
             'delete syllabi',
-            'view assignments'
+            'view assignments',
+            'view payments',
+            'collect fees',
+            'manage expenses',
+            'view reports',
+            'view transactions',
+            'send fee reminder'
         );
     }
 }

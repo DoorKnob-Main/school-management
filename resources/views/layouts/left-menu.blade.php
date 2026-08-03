@@ -138,9 +138,30 @@
                         <a class="nav-link {{ request()->is('promotions*')? 'active' : '' }}" href="{{url('promotions/index')}}"><i class="bi bi-sort-numeric-up-alt"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Promotion</span></a>
                     </li>
                     @endif
+                    @if(Auth::user()->role == "admin" || Auth::user()->can('view payments'))
                     <li class="nav-item">
-                        <a class="nav-link disabled" href="#" aria-disabled="true"><i class="bi bi-currency-exchange"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Payment</span></a>
+                        <a type="button" href="#payment-submenu" data-bs-toggle="collapse" class="d-flex nav-link {{ request()->is('finance*')? 'active' : '' }}"><i class="bi bi-currency-exchange"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline">Payment</span>
+                            <i class="ms-auto d-inline d-sm-none d-md-none d-xl-inline bi bi-chevron-down"></i>
+                        </a>
+                        <ul class="nav collapse {{ request()->is('finance*')? 'show' : 'hide' }} bg-white" id="payment-submenu">
+                            @can('view payments')
+                            <li class="nav-item w-100" {{ request()->routeIs('finance.fee-collection.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('finance.fee-collection.index')}}"><i class="bi bi-cash-stack me-2"></i> Fee Collection</a></li>
+                            @endcan
+                            @can('view transactions')
+                            <li class="nav-item w-100" {{ request()->routeIs('finance.transactions.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('finance.transactions.index')}}"><i class="bi bi-journal-text me-2"></i> Transactions</a></li>
+                            @endcan
+                            @can('manage expenses')
+                            <li class="nav-item w-100" {{ request()->routeIs('finance.expenses.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('finance.expenses.index')}}"><i class="bi bi-credit-card me-2"></i> Expenses</a></li>
+                            @endcan
+                            @can('view reports')
+                            <li class="nav-item w-100" {{ request()->routeIs('finance.reports.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('finance.reports.index')}}"><i class="bi bi-bar-chart-line me-2"></i> Reports</a></li>
+                            @endcan
+                            @can('send fee reminder')
+                            <li class="nav-item w-100" {{ request()->routeIs('finance.fee-reminder.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('finance.fee-reminder.index')}}"><i class="bi bi-bell me-2"></i> Fee Reminder</a></li>
+                            @endcan
+                        </ul>
                     </li>
+                    @endif
                     @if (Auth::user()->role == "admin")
                     <li class="nav-item">
                         <a class="nav-link disabled" href="#" aria-disabled="true"><i class="bi bi-person-lines-fill"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Staff</span></a>
