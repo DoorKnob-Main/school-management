@@ -166,7 +166,8 @@ class PaymentRepository implements PaymentInterface
     public function generateReceiptNumber()
     {
         $datePrefix = Carbon::now()->format('Ymd');
-        $prefix = "FEE-{$datePrefix}-";
+        $configuredPrefix = setting('finance_receipt_prefix', 'FEE');
+        $prefix = "{$configuredPrefix}-{$datePrefix}-";
 
         $latest = FeePayment::where('receipt_number', 'like', "{$prefix}%")
             ->orderBy('id', 'desc')

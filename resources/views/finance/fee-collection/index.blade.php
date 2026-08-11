@@ -220,19 +220,15 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Payment Mode <span class="text-danger">*</span></label>
-                            <select name="payment_mode" class="form-select form-select-lg" required>
-                                <option value="Cash">Cash</option>
-                                <option value="UPI">UPI</option>
-                                <option value="Cheque">Cheque</option>
-                                <option value="Card">Card</option>
-                                <option value="Bank Transfer">Bank Transfer</option>
-                                <option value="Online">Online</option>
-                                <option value="Other">Other</option>
+                            <select name="payment_mode" id="modal_payment_mode" class="form-select form-select-lg" required>
+                                @foreach(array_filter(array_map('trim', explode(',', setting('finance_payment_modes', 'Cash,UPI,Cheque,Card,Bank Transfer,Online,Other')))) as $mode)
+                                    <option value="{{ $mode }}">{{ $mode }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Reference Number (Txn ID / Cheque No)</label>
-                            <input type="text" name="reference_number" class="form-control form-control-lg" placeholder="Optional reference #">
+                            <label class="form-label fw-bold" id="reference_number_label">Reference Number (Txn ID / Cheque No)</label>
+                            <input type="text" name="reference_number" id="modal_reference_number" class="form-control form-control-lg" placeholder="Optional reference #">
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold">Notes / Comments</label>
@@ -291,6 +287,23 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Modes that require a reference/txn number (super-admin configurable via Settings > Finance)
+    var referenceRequiredModes = @json(array_filter(array_map('trim', explode(',', setting('finance_require_reference_for_modes', '')))));
+    var paymentModeSelect = document.getElementById('modal_payment_mode');
+    var referenceInput = document.getElementById('modal_reference_number');
+    var referenceLabel = document.getElementById('reference_number_label');
+
+    function syncReferenceRequirement() {
+        var isRequired = referenceRequiredModes.indexOf(paymentModeSelect.value) !== -1;
+        referenceInput.required = isRequired;
+        referenceLabel.innerHTML = 'Reference Number (Txn ID / Cheque No)' + (isRequired ? ' <span class="text-danger">*</span>' : '');
+    }
+
+    if (paymentModeSelect) {
+        paymentModeSelect.addEventListener('change', syncReferenceRequirement);
+        syncReferenceRequirement();
+    }
+
     // Collect Fee button click handler
     document.querySelectorAll('.btn-collect').forEach(function(btn) {
         btn.addEventListener('click', function() {

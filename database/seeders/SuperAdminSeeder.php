@@ -157,6 +157,13 @@ class SuperAdminSeeder extends Seeder
             ['key' => 'report_primary_color', 'value' => '#0d6efd', 'group' => 'reports', 'type' => 'color'],
             ['key' => 'report_secondary_color', 'value' => '#6c757d', 'group' => 'reports', 'type' => 'color'],
 
+            // Finance / Fee Collection
+            ['key' => 'finance_payment_modes', 'value' => 'Cash,UPI,Cheque,Card,Bank Transfer,Online,Other', 'group' => 'finance', 'type' => 'text'],
+            ['key' => 'finance_receipt_prefix', 'value' => 'FEE', 'group' => 'finance', 'type' => 'text'],
+            ['key' => 'finance_receipt_particulars_label', 'value' => 'School Fee Payment', 'group' => 'finance', 'type' => 'text'],
+            ['key' => 'finance_receipt_title', 'value' => 'OFFICIAL FEE RECEIPT', 'group' => 'finance', 'type' => 'text'],
+            ['key' => 'finance_require_reference_for_modes', 'value' => 'UPI,Cheque,Card,Bank Transfer,Online', 'group' => 'finance', 'type' => 'text'],
+
             // System Preferences
             ['key' => 'maintenance_mode', 'value' => '0', 'group' => 'system', 'type' => 'boolean'],
             ['key' => 'registration_enabled', 'value' => '0', 'group' => 'system', 'type' => 'boolean'],

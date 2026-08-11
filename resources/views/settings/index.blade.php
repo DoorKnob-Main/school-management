@@ -65,6 +65,9 @@
                             <a class="nav-link {{ $activeTab === 'system' ? 'active fw-bold' : '' }}" href="{{ route('settings.index', ['tab' => 'system']) }}"><i class="bi bi-cpu me-1"></i> System</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {{ $activeTab === 'finance' ? 'active fw-bold' : '' }}" href="{{ route('settings.index', ['tab' => 'finance']) }}"><i class="bi bi-cash-coin me-1"></i> Finance</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {{ $activeTab === 'advanced' ? 'active fw-bold' : '' }}" href="{{ route('settings.index', ['tab' => 'advanced']) }}"><i class="bi bi-code-slash me-1"></i> Advanced</a>
                         </li>
                     </ul>
@@ -989,6 +992,42 @@
                                     <label class="form-label font-weight-bold">Session Timeout (Minutes)</label>
                                     <input type="number" name="session_timeout" class="form-control" value="{{ setting('session_timeout', '120') }}">
                                     <input type="hidden" name="_groups[session_timeout]" value="system">
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- TAB: FINANCE -->
+                        @if($activeTab === 'finance')
+                            <h5 class="fw-bold mb-3 border-bottom pb-2 text-primary"><i class="bi bi-cash-coin me-2"></i> Fee Collection & Receipt Configuration</h5>
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold">Payment Modes (comma-separated)</label>
+                                    <input type="text" name="finance_payment_modes" class="form-control" value="{{ setting('finance_payment_modes', 'Cash,UPI,Cheque,Card,Bank Transfer,Online,Other') }}" placeholder="Cash,UPI,Cheque,Card,Bank Transfer,Online,Other">
+                                    <small class="text-muted">Shown as options in the Collect Fee form. Add/remove modes without a code change.</small>
+                                    <input type="hidden" name="_groups[finance_payment_modes]" value="finance">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Modes Requiring Reference Number</label>
+                                    <input type="text" name="finance_require_reference_for_modes" class="form-control" value="{{ setting('finance_require_reference_for_modes', 'UPI,Cheque,Card,Bank Transfer,Online') }}" placeholder="UPI,Cheque,Card,Bank Transfer,Online">
+                                    <small class="text-muted">Cashier must enter a transaction/cheque number for these modes.</small>
+                                    <input type="hidden" name="_groups[finance_require_reference_for_modes]" value="finance">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Receipt Number Prefix</label>
+                                    <input type="text" name="finance_receipt_prefix" class="form-control" value="{{ setting('finance_receipt_prefix', 'FEE') }}" placeholder="FEE">
+                                    <small class="text-muted">Receipts are numbered {{ setting('finance_receipt_prefix', 'FEE') }}-YYYYMMDD-00001.</small>
+                                    <input type="hidden" name="_groups[finance_receipt_prefix]" value="finance">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Receipt Document Title</label>
+                                    <input type="text" name="finance_receipt_title" class="form-control" value="{{ setting('finance_receipt_title', 'OFFICIAL FEE RECEIPT') }}" placeholder="OFFICIAL FEE RECEIPT">
+                                    <input type="hidden" name="_groups[finance_receipt_title]" value="finance">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Receipt Line-Item Label</label>
+                                    <input type="text" name="finance_receipt_particulars_label" class="form-control" value="{{ setting('finance_receipt_particulars_label', 'School Fee Payment') }}" placeholder="School Fee Payment">
+                                    <small class="text-muted">Description text shown on the receipt's payment row.</small>
+                                    <input type="hidden" name="_groups[finance_receipt_particulars_label]" value="finance">
                                 </div>
                             </div>
                         @endif

@@ -166,14 +166,18 @@ class FeeCollectionController extends Controller
         ]);
     }
 
-    public function receipt($id)
+    public function receipt($id, \App\Services\ReportEngineService $reportEngine)
     {
         $payment = $this->paymentRepository->findPaymentById($id);
         $summary = $this->paymentRepository->getStudentFeeSummary($payment->student_id, $payment->session_id);
 
-        return view('finance.fee-collection.receipt', [
+        return $reportEngine->preview('finance.fee-collection.receipt', [
             'payment' => $payment,
             'summary' => $summary,
+            'pdfDownloadUrl' => route('finance.fee-collection.receipt-pdf', $payment->id),
+        ], [
+            'paper_size'  => 'A4',
+            'orientation' => 'portrait',
         ]);
     }
 
