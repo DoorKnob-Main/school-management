@@ -37,7 +37,7 @@
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">{{$student->first_name}} {{$student->last_name}}</h5>
-                                        <p class="card-text">#ID: {{$promotion_info->id_card_number}}</p>
+                                        <p class="card-text">#ID: {{$promotion_info->id_card_number ?? 'N/A'}}</p>
                                     </div>
                                     <ul class="list-group list-group-flush">
                                         <li class="list-group-item">Gender: {{$student->gender}}</li>
@@ -100,19 +100,19 @@
                                         <tbody>
                                             <tr>
                                                 <th scope="row">Father's Name:</th>
-                                                <td>{{$student->parent_info->father_name}}</td>
+                                                <td>{{$student->parent_info->father_name ?? 'N/A'}}</td>
                                                 <th>Mother's Name:</th>
-                                                <td>{{$student->parent_info->mother_name}}</td>
+                                                <td>{{$student->parent_info->mother_name ?? 'N/A'}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row">Father's Phone:</th>
-                                                <td>{{$student->parent_info->father_phone}}</td>
+                                                <td>{{$student->parent_info->father_phone ?? 'N/A'}}</td>
                                                 <th>Mother's Phone:</th>
-                                                <td>{{$student->parent_info->mother_phone}}</td>
+                                                <td>{{$student->parent_info->mother_phone ?? 'N/A'}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row">Address:</th>
-                                                <td colspan="3">{{$student->parent_info->parent_address}}</td>
+                                                <td colspan="3">{{$student->parent_info->parent_address ?? 'N/A'}}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -123,13 +123,13 @@
                                         <tbody>
                                             <tr>
                                                 <th scope="row">Class:</th>
-                                                <td>{{$promotion_info->section->schoolClass->class_name}}</td>
+                                                <td>{{$promotion_info->section->schoolClass->class_name ?? 'N/A'}}</td>
                                                 <th>Board Reg. No.:</th>
-                                                <td>{{$student->academic_info->board_reg_no}}</td>
+                                                <td>{{$student->academic_info->board_reg_no ?? 'N/A'}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row">Section:</th>
-                                                <td colspan="3">{{$promotion_info->section->section_name}}</td>
+                                                <td colspan="3">{{$promotion_info->section->section_name ?? 'N/A'}}</td>
                                             </tr>
                                         </tbody>
                                     </table>

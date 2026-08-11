@@ -20,9 +20,15 @@
                                 </ol>
                             </nav>
                         </div>
-                        <div>
-                            <button onclick="window.print()" class="btn btn-outline-primary me-2"><i class="bi bi-printer"></i> Print Report</button>
-                            <button onclick="exportTableToCSV('financial-reports.csv')" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel"></i> Export CSV</button>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('finance.reports.preview', request()->query()) }}" target="_blank" class="btn btn-outline-secondary">
+                                <i class="bi bi-eye"></i> Letterhead Preview
+                            </a>
+                            <a href="{{ route('finance.reports.pdf', request()->query()) }}" class="btn btn-primary">
+                                <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                            </a>
+                            <button onclick="window.print()" class="btn btn-outline-primary"><i class="bi bi-printer"></i> Print</button>
+                            <button onclick="exportTableToCSV('financial-reports.csv')" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel"></i> CSV</button>
                         </div>
                     </div>
 
@@ -200,18 +206,18 @@
                                         @endphp
                                         @forelse($classWiseComparison as $row)
                                             @php
-                                                $grandTotalFee += $row['total_fee'];
-                                                $grandPaid += $row['paid_amount'];
-                                                $grandOutstanding += $row['outstanding'];
+                                                $grandTotalFee += $row['total_expected'];
+                                                $grandPaid += $row['total_collected'];
+                                                $grandOutstanding += $row['total_pending'];
                                                 $grandPendingStudents += $row['pending_count'];
-                                                $pct = $row['total_fee'] > 0 ? round(($row['paid_amount'] / $row['total_fee']) * 100, 1) : 0;
+                                                $pct = $row['total_expected'] > 0 ? round(($row['total_collected'] / $row['total_expected']) * 100, 1) : 0;
                                             @endphp
                                             <tr>
                                                 <td class="fw-bold">{{$row['class_name']}}</td>
                                                 <td><span class="badge bg-light text-dark border">{{$row['student_count']}} Students</span></td>
-                                                <td class="fw-bold">₹{{number_format($row['total_fee'], 2)}}</td>
-                                                <td class="text-success fw-bold">₹{{number_format($row['paid_amount'], 2)}}</td>
-                                                <td class="text-danger fw-bold">₹{{number_format($row['outstanding'], 2)}}</td>
+                                                <td class="fw-bold">₹{{number_format($row['total_expected'], 2)}}</td>
+                                                <td class="text-success fw-bold">₹{{number_format($row['total_collected'], 2)}}</td>
+                                                <td class="text-danger fw-bold">₹{{number_format($row['total_pending'], 2)}}</td>
                                                 <td><span class="badge bg-warning text-dark">{{$row['pending_count']}}</span></td>
                                                 <td>
                                                     <div class="progress" style="height: 20px;">

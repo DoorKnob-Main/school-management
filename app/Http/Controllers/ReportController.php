@@ -9,11 +9,13 @@ use App\Interfaces\ExpenseInterface;
 use App\Interfaces\SchoolClassInterface;
 use App\Interfaces\SchoolSessionInterface;
 use App\Interfaces\SectionInterface;
+use App\Services\ReportEngineService;
 use App\Traits\SchoolSession;
 use App\Models\Promotion;
 use App\Models\FeePayment;
 use App\Models\Expense;
 use App\Models\SchoolClass;
+use App\Models\SchoolSession as SchoolSessionModel;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -46,12 +48,69 @@ class ReportController extends Controller
         $this->sectionRepository       = $sectionRepository;
     }
 
+    /**
+     * Display standard web dashboard view.
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View
+     */
     public function index(Request $request)
+    {
+        $data = $this->prepareReportData($request);
+        return view('finance.reports.index', $data);
+    }
+
+    /**
+     * Download Financial Report PDF via BrowserShot.
+     *
+     * @param Request $request
+     * @param ReportEngineService $reportEngine
+     * @return \Illuminate\Http\Response
+     */
+    public function exportPdf(Request $request, ReportEngineService $reportEngine)
+    {
+        $data = $this->prepareReportData($request);
+        $filename = 'financial_report_' . date('Y-m-d_His') . '.pdf';
+
+        return $reportEngine->downloadPdf(
+            'reports.templates.financial-summary',
+            $data,
+            $filename
+        );
+    }
+
+    /**
+     * Preview Financial Report using Base Layout in Browser.
+     *
+     * @param Request $request
+     * @param ReportEngineService $reportEngine
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function previewPdf(Request $request, ReportEngineService $reportEngine)
+    {
+        $data = $this->prepareReportData($request);
+        $data['pdfDownloadUrl'] = route('finance.reports.pdf', $request->query());
+
+        return $reportEngine->preview(
+            'reports.templates.financial-summary',
+            $data
+        );
+    }
+
+    /**
+     * Prepare consolidated financial reporting analytics and multi-class breakdowns.
+     *
+     * @param Request $request
+     * @return array
+     */
+    protected function prepareReportData(Request $request): array
     {
         $current_school_session_id = $this->getSchoolCurrentSession();
         $classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
+        $session = SchoolSessionModel::find($current_school_session_id);
+        $sessionName = $session ? $session->session_name : (date('Y') . '-' . (date('Y') + 1) . ' Academic Session');
 
-        // Date Range Logic (Supports Quick Date Filters & Custom Date Range)
+        // Date Range Logic
         $quickFilter = $request->get('quick_filter', 'current_session');
         $fromDate = $request->get('from_date');
         $toDate = $request->get('to_date');
@@ -90,7 +149,7 @@ class ReportController extends Controller
             }
         }
 
-        // Selected Classes (Array of Class IDs for Multi-Class Reports)
+        // Selected Classes
         $selectedClassIds = $request->get('class_ids', []);
         if (is_string($selectedClassIds)) {
             $selectedClassIds = explode(',', $selectedClassIds);
@@ -134,10 +193,10 @@ class ReportController extends Controller
 
             foreach ($clsPromos as $cp) {
                 $summary = $this->paymentRepository->getStudentFeeSummary($cp->student_id, $current_school_session_id);
-                $clsTotalFee += $summary['total_fee'];
-                $clsPaid += $summary['paid_amount'];
-                $clsOutstanding += $summary['remaining_due'];
-                if ($summary['remaining_due'] > 0) {
+                $clsTotalFee += ($summary['total_fee'] ?? 0);
+                $clsPaid += ($summary['paid_amount'] ?? 0);
+                $clsOutstanding += ($summary['remaining_due'] ?? 0);
+                if (($summary['remaining_due'] ?? 0) > 0) {
                     $clsPendingCount++;
                 }
             }
@@ -146,13 +205,13 @@ class ReportController extends Controller
             $pendingStudentsCount += $clsPendingCount;
 
             $classWiseComparison[] = [
-                'class_id'      => $cls->id,
-                'class_name'    => $cls->name,
-                'student_count' => $clsPromos->count(),
-                'total_fee'     => $clsTotalFee,
-                'paid_amount'   => $clsPaid,
-                'outstanding'   => $clsOutstanding,
-                'pending_count' => $clsPendingCount,
+                'class_id'        => $cls->id,
+                'class_name'      => $cls->class_name ?? $cls->name ?? ('Class ' . $cls->id),
+                'student_count'   => $clsPromos->count(),
+                'total_expected'  => $clsTotalFee,
+                'total_collected' => $clsPaid,
+                'total_pending'   => $clsOutstanding,
+                'pending_count'   => $clsPendingCount,
             ];
         }
 
@@ -177,8 +236,9 @@ class ReportController extends Controller
             $paymentModeBreakdown[$mode] = $sum;
         }
 
-        $data = [
+        return [
             'current_school_session_id' => $current_school_session_id,
+            'sessionName'          => $sessionName,
             'classes'              => $classes,
             'selectedClassIds'     => $selectedClassIds,
             'quickFilter'          => $quickFilter,
@@ -186,17 +246,15 @@ class ReportController extends Controller
             'toDate'               => $toDate,
             'payment_mode'         => $request->get('payment_mode', ''),
             'analytics'            => [
-                'total_collection'  => $analytics['total_collection'],
-                'total_expenses'    => $analytics['total_expenses'],
-                'net_balance'       => $analytics['net_balance'],
+                'total_collection'  => $analytics['total_collection'] ?? 0,
+                'total_expenses'    => $analytics['total_expenses'] ?? 0,
+                'net_balance'       => $analytics['net_balance'] ?? 0,
                 'outstanding_fees'  => $totalOutstanding,
-                'transaction_count' => $analytics['transaction_count'],
+                'transaction_count' => $analytics['transaction_count'] ?? 0,
                 'pending_students'  => $pendingStudentsCount,
             ],
             'classWiseComparison'  => $classWiseComparison,
             'paymentModeBreakdown' => $paymentModeBreakdown,
         ];
-
-        return view('finance.reports.index', $data);
     }
 }

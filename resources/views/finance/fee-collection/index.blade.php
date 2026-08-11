@@ -35,7 +35,7 @@
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold"><i class="bi bi-diagram-3"></i> Class</label>
                                     <select name="class_id" class="form-select" onchange="this.form.submit()">
-                                        <option value="0">All Classes</option>
+                                        <option value="0" {{$selected_class_id == 0 ? 'selected' : ''}}>All Classes</option>
                                         @foreach($classes as $cls)
                                             <option value="{{$cls->id}}" {{$selected_class_id == $cls->id ? 'selected' : ''}}>{{$cls->class_name}}</option>
                                         @endforeach
@@ -44,7 +44,7 @@
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold"><i class="bi bi-layers"></i> Section</label>
                                     <select name="section_id" class="form-select" onchange="this.form.submit()">
-                                        <option value="0">All Sections</option>
+                                        <option value="0" {{$selected_section_id == 0 ? 'selected' : ''}}>All Sections</option>
                                         @foreach($sections as $sec)
                                             <option value="{{$sec->id}}" {{$selected_section_id == $sec->id ? 'selected' : ''}}>{{$sec->section_name}}</option>
                                         @endforeach

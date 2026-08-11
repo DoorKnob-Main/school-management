@@ -26,14 +26,17 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg62-turbo-dev \
     libxml2 \
-    wget
-
-# RUN pecl install xdebug-2.9.2 \
-# 	&& docker-php-ext-enable xdebug \
-#     && echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    wget \
+    curl \
+    gnupg \
+    chromium \
+    fonts-dejavu \
+    fonts-liberation \
+    fontconfig \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g puppeteer \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install extensions
 RUN docker-php-ext-install pdo_mysql zip exif pcntl

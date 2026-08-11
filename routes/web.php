@@ -192,6 +192,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/fee-collection/collect', [FeeCollectionController::class, 'collect'])->name('fee-collection.collect');
         Route::get('/fee-collection/history/{student_id}', [FeeCollectionController::class, 'getHistory'])->name('fee-collection.history');
         Route::get('/fee-collection/receipt/{id}', [FeeCollectionController::class, 'receipt'])->name('fee-collection.receipt');
+        Route::get('/fee-collection/receipt/{id}/pdf', [FeeCollectionController::class, 'receiptPdf'])->name('fee-collection.receipt-pdf');
 
         // Fee Structure Configuration
         Route::get('/fee-structure', [FeeStructureController::class, 'index'])->name('fee-structure.index');
@@ -208,10 +209,20 @@ Route::middleware(['auth'])->group(function () {
 
         // Reports
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
+        Route::get('/reports/preview', [ReportController::class, 'previewPdf'])->name('reports.preview');
 
         // Fee Reminder
         Route::get('/fee-reminder', [FeeReminderController::class, 'index'])->name('fee-reminder.index');
         Route::post('/fee-reminder/send', [FeeReminderController::class, 'send'])->name('fee-reminder.send');
+    });
+
+    // Reusable Report Engine Routes
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/base/preview', [\App\Http\Controllers\ReportEngineController::class, 'previewBaseReport'])->name('base.preview');
+        Route::get('/base/pdf', [\App\Http\Controllers\ReportEngineController::class, 'downloadBaseReportPdf'])->name('base.pdf');
+        Route::get('/base/stream', [\App\Http\Controllers\ReportEngineController::class, 'streamBaseReportPdf'])->name('base.stream');
+        Route::get('/settings/preview', [\App\Http\Controllers\ReportEngineController::class, 'settingsPreview'])->name('settings.preview');
     });
 
     // White-Label Settings Module (Super Admin Only)

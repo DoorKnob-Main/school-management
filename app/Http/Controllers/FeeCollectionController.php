@@ -50,16 +50,28 @@ class FeeCollectionController extends Controller
         $current_school_session_id = $this->getSchoolCurrentSession();
 
         $classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
-        $selected_class_id = $request->get('class_id', $classes->first()->id ?? 0);
+        if ($classes->isEmpty()) {
+            $classes = \App\Models\SchoolClass::all();
+        }
+
+        $selected_class_id = (int) $request->get('class_id', 0);
 
         $sections = collect();
         if ($selected_class_id > 0) {
             $sections = $this->sectionRepository->getAllByClassId($selected_class_id);
+        } else {
+            $sections = $this->sectionRepository->getAllBySession($current_school_session_id);
+            if ($sections->isEmpty()) {
+                $sections = \App\Models\Section::all();
+            }
         }
-        $selected_section_id = $request->get('section_id', 0);
+        $selected_section_id = (int) $request->get('section_id', 0);
 
-        $query = Promotion::with(['student.parent_info', 'student.academic_info', 'schoolClass', 'section'])
-            ->where('session_id', $current_school_session_id);
+        $query = Promotion::with(['student.parent_info', 'student.academic_info', 'schoolClass', 'section']);
+
+        if ($current_school_session_id > 0 && Promotion::where('session_id', $current_school_session_id)->exists()) {
+            $query->where('session_id', $current_school_session_id);
+        }
 
         if ($selected_class_id > 0) {
             $query->where('class_id', $selected_class_id);
@@ -163,5 +175,25 @@ class FeeCollectionController extends Controller
             'payment' => $payment,
             'summary' => $summary,
         ]);
+    }
+
+    public function receiptPdf($id, \App\Services\ReportEngineService $reportEngine)
+    {
+        $payment = $this->paymentRepository->findPaymentById($id);
+        $summary = $this->paymentRepository->getStudentFeeSummary($payment->student_id, $payment->session_id);
+        $filename = 'receipt_' . ($payment->receipt_number ?: $id) . '.pdf';
+
+        return $reportEngine->downloadPdf(
+            'finance.fee-collection.receipt',
+            [
+                'payment' => $payment,
+                'summary' => $summary,
+            ],
+            $filename,
+            [
+                'paper_size'  => 'A4',
+                'orientation' => 'portrait',
+            ]
+        );
     }
 }

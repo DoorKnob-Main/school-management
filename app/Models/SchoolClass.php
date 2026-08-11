@@ -37,4 +37,12 @@ class SchoolClass extends Model
     {
         return $this->hasMany(Syllabus::class, 'class_id', 'id');
     }
+
+    /**
+     * Get the promotions / student enrollments for the class.
+     */
+    public function promotions()
+    {
+        return $this->hasMany(Promotion::class, 'class_id', 'id');
+    }
 }

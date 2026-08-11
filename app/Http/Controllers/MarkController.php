@@ -186,6 +186,12 @@ class MarkController extends Controller
 
         $current_school_session_id = $this->getSchoolCurrentSession();
 
+        $academicSettingRepository = new \App\Repositories\AcademicSettingRepository();
+        $academic_setting = $academicSettingRepository->getAcademicSetting();
+        if ($academic_setting && $academic_setting->marks_submission_status == 'off' && !auth()->user()->isAdminOrSuperAdmin()) {
+            return back()->withError('Final marks submission window is currently closed by the administrator.');
+        }
+
         $markRepository = new MarkRepository();
         $studentsWithMarks = $markRepository->getAll($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
         $studentsWithMarks = $studentsWithMarks->groupBy('student_id');
@@ -215,6 +221,11 @@ class MarkController extends Controller
     {
         $current_school_session_id = $this->getSchoolCurrentSession();
         $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+
+        $latestSession = $this->schoolSessionRepository->getLatestSession();
+        if ($request->session_id != $latestSession->id && !auth()->user()->isAdminOrSuperAdmin()) {
+            return back()->withError('Previous academic sessions are read-only and cannot be modified.');
+        }
 
         $validator = Validator::make($request->all(), [
             'student_mark' => 'required|array',
@@ -285,6 +296,13 @@ class MarkController extends Controller
         $current_school_session_id = $this->getSchoolCurrentSession();
 
         $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+
+        $academicSettingRepository = new \App\Repositories\AcademicSettingRepository();
+        $academic_setting = $academicSettingRepository->getAcademicSetting();
+        if ($academic_setting && $academic_setting->marks_submission_status == 'off' && !auth()->user()->isAdminOrSuperAdmin()) {
+            return back()->withError('Final marks submission window is currently closed by the administrator.');
+        }
+
         $rows = [];
         foreach($request->calculated_mark as $id => $cmark) {
                 $row = [];
@@ -324,6 +342,10 @@ class MarkController extends Controller
         $course_id = $request->query('course_id');
         $course_name = $request->query('course_name');
         $student_id = $request->query('student_id');
+
+        if (auth()->user()->effective_role == 'student' && auth()->user()->id != $student_id) {
+            return abort(404);
+        }
         $markRepository = new MarkRepository();
         $marks = $markRepository->getAllByStudentId($session_id, $semester_id, $class_id, $section_id, $course_id, $student_id);
         $finalMarks = $markRepository->getAllFinalMarksByStudentId($session_id, $student_id, $semester_id, $class_id, $section_id, $course_id);

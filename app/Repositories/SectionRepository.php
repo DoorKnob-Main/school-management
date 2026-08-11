@@ -15,7 +15,11 @@ class SectionRepository implements SectionInterface {
     }
 
     public function getAllBySession($session_id) {
-        return Section::where('session_id', $session_id)->get();
+        $sections = Section::where('session_id', $session_id)->get();
+        if ($sections->isEmpty()) {
+            return Section::all();
+        }
+        return $sections;
     }
 
     public function getAllByClassId($class_id) {

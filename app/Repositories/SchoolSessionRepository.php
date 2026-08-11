@@ -7,7 +7,7 @@ use App\Interfaces\SchoolSessionInterface;
 
 class SchoolSessionRepository implements SchoolSessionInterface {
     public function getLatestSession() {
-        $school_session = SchoolSession::latest()->first();
+        $school_session = SchoolSession::orderBy('id', 'desc')->first();
         if($school_session){
             return $school_session;
         } else {

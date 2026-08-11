@@ -71,10 +71,13 @@ class CourseController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function getStudentCourses($student_id) {
+        if (auth()->user()->effective_role == 'student' && auth()->user()->id != $student_id) {
+            return abort(404);
+        }
         $current_school_session_id = $this->getSchoolCurrentSession();
         $promotionRepository = new PromotionRepository();
         $class_info = $promotionRepository->getPromotionInfoById($current_school_session_id, $student_id);
-        $courses = $this->schoolCourseRepository->getByClassId($class_info->class_id);
+        $courses = $class_info ? $this->schoolCourseRepository->getByClassId($class_info->class_id) : collect();
 
         $data = [
             'class_info'    => $class_info,

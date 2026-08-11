@@ -38,9 +38,9 @@
 </head>
 <body>
 
-<div class="container">
-    <div class="no-print text-center mt-3">
-        <button onclick="window.print()" class="btn btn-primary btn-lg me-2"><i class="bi bi-printer"></i> Print Receipt</button>
+    <div class="no-print text-center mt-3 d-flex justify-content-center gap-2">
+        <a href="{{ route('finance.fee-collection.receipt-pdf', $payment->id) }}" class="btn btn-success btn-lg"><i class="bi bi-file-earmark-pdf"></i> Download PDF</a>
+        <button onclick="window.print()" class="btn btn-primary btn-lg"><i class="bi bi-printer"></i> Print Receipt</button>
         <button onclick="window.close()" class="btn btn-secondary btn-lg"><i class="bi bi-x-circle"></i> Close</button>
     </div>
 

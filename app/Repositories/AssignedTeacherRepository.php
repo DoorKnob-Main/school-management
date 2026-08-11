@@ -28,15 +28,21 @@ class AssignedTeacherRepository implements AssignedTeacherInterface {
     }
 
     public function getAssignedTeacher($session_id, $semester_id, $class_id, $section_id, $course_id) {
-        if($semester_id == 0) {
-            $semester_id = Semester::where('session_id', $session_id)
-            ->first()->id;
+        $query = AssignedTeacher::where('session_id', $session_id);
+
+        if ($semester_id > 0) {
+            $query->where('semester_id', $semester_id);
         }
-        return AssignedTeacher::where('session_id', $session_id)
-                        ->where('semester_id', $semester_id)
-                        ->where('class_id', $class_id)
-                        ->where('section_id', $section_id)
-                        ->where('course_id', $course_id)
-                        ->first(); 
+        if ($class_id > 0) {
+            $query->where('class_id', $class_id);
+        }
+        if ($section_id > 0) {
+            $query->where('section_id', $section_id);
+        }
+        if ($course_id > 0) {
+            $query->where('course_id', $course_id);
+        }
+
+        return $query->first(); 
     }
 }

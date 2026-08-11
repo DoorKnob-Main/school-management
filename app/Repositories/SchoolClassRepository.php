@@ -16,7 +16,11 @@ class SchoolClassRepository implements SchoolClassInterface {
     }
 
     public function getAllBySession($session_id) {
-        return SchoolClass::where('session_id', $session_id)->get();
+        $classes = SchoolClass::where('session_id', $session_id)->get();
+        if ($classes->isEmpty()) {
+            return SchoolClass::all();
+        }
+        return $classes;
     }
 
     public function getAllBySessionAndTeacher($session_id, $teacher_id) {

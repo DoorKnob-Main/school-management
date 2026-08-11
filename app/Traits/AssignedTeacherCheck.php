@@ -13,11 +13,20 @@ trait AssignedTeacherCheck {
      * @return string
     */
     public function checkIfLoggedInUserIsAssignedTeacher(Request $request, $current_school_session_id) {
+        if (Auth::user() && Auth::user()->isAdminOrSuperAdmin()) {
+            return;
+        }
+
         $assignedTeacherRepository = new AssignedTeacherRepository();
 
-        $assignedTeacher = $assignedTeacherRepository->getAssignedTeacher($current_school_session_id, $request->semester_id, $request->class_id, $request->section_id, $request->course_id);
+        $semester_id = $request->semester_id ?? $request->query('semester_id', 0);
+        $class_id = $request->class_id ?? $request->query('class_id', 0);
+        $section_id = $request->section_id ?? $request->query('section_id', 0);
+        $course_id = $request->course_id ?? $request->query('course_id', 0);
+
+        $assignedTeacher = $assignedTeacherRepository->getAssignedTeacher($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
         
-        if($assignedTeacher === null || $assignedTeacher->teacher_id !== Auth::user()->id) {
+        if($assignedTeacher === null || $assignedTeacher->teacher_id != Auth::user()->id) {
             abort(404);
         }
     }

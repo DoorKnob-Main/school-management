@@ -569,27 +569,375 @@
 
                         <!-- TAB 9: REPORTS & PDF -->
                         @if($activeTab === 'reports')
-                            <h5 class="fw-bold mb-3 border-bottom pb-2 text-primary"><i class="bi bi-file-earmark-pdf me-2"></i> Printable Reports & PDF Header Branding</h5>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label font-weight-bold">Report Footer Disclaimer</label>
-                                    <input type="text" name="report_footer_text" class="form-control" value="{{ setting('report_footer_text', 'This is a computer-generated document. No signature required.') }}">
-                                    <input type="hidden" name="_groups[report_footer_text]" value="reports">
+                            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-file-earmark-pdf me-2"></i> Report Engine & Base Letterhead Configuration</h5>
+                                    <small class="text-muted">Configure institutional branding, watermarks, digital signatures, typography, and paper layout across all system reports.</small>
                                 </div>
-
-                                <div class="col-md-3">
-                                    <label class="form-label font-weight-bold">Show Watermark on Reports</label>
-                                    <select name="show_watermark_on_report" class="form-select">
-                                        <option value="1" {{ setting('show_watermark_on_report', '1') == '1' ? 'selected' : '' }}>Yes</option>
-                                        <option value="0" {{ setting('show_watermark_on_report', '1') == '0' ? 'selected' : '' }}>No</option>
-                                    </select>
-                                    <input type="hidden" name="_groups[show_watermark_on_report]" value="reports">
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('reports.base.preview') }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye me-1"></i> Preview Base Report
+                                    </a>
+                                    <a href="{{ route('reports.base.pdf') }}" target="_blank" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-download me-1"></i> Test BrowserShot PDF
+                                    </a>
                                 </div>
+                            </div>
 
-                                <div class="col-md-3">
-                                    <label class="form-label font-weight-bold">Report Primary Color</label>
-                                    <input type="color" name="report_primary_color" class="form-control form-control-color w-100" value="{{ setting('report_primary_color', '#0d6efd') }}">
-                                    <input type="hidden" name="_groups[report_primary_color]" value="reports">
+                            <!-- 1. School Legal & Identification -->
+                            <div class="card mb-4 border-0 shadow-sm bg-light">
+                                <div class="card-header bg-white fw-bold text-dark py-2">
+                                    <i class="bi bi-bank2 me-1 text-primary"></i> 1. School Identification & Legal Information
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Report / Letterhead School Name</label>
+                                            <input type="text" name="report_school_name" class="form-control" value="{{ setting('report_school_name', setting('organization_name', 'DoorKnob Education')) }}">
+                                            <input type="hidden" name="_groups[report_school_name]" value="reports">
+                                            <small class="text-muted">Overrides organization name on official printed headers.</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Principal / Head of Institution Name</label>
+                                            <input type="text" name="principal_name" class="form-control" value="{{ setting('principal_name', '') }}" placeholder="e.g. Dr. Arthur Pendelton">
+                                            <input type="hidden" name="_groups[principal_name]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Affiliation Number</label>
+                                            <input type="text" name="affiliation_number" class="form-control" value="{{ setting('affiliation_number', '') }}" placeholder="e.g. CBSE-930182">
+                                            <input type="hidden" name="_groups[affiliation_number]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">School Code</label>
+                                            <input type="text" name="school_code" class="form-control" value="{{ setting('school_code', '') }}" placeholder="e.g. SCH-0428">
+                                            <input type="hidden" name="_groups[school_code]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">UDISE Code</label>
+                                            <input type="text" name="udise_code" class="form-control" value="{{ setting('udise_code', '') }}" placeholder="e.g. 27210500101">
+                                            <input type="hidden" name="_groups[udise_code]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Registration / Society No</label>
+                                            <input type="text" name="registration_number" class="form-control" value="{{ setting('registration_number', '') }}" placeholder="e.g. REG-8891-2021">
+                                            <input type="hidden" name="_groups[registration_number]" value="reports">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Header & Letterhead Customization -->
+                            <div class="card mb-4 border-0 shadow-sm bg-light">
+                                <div class="card-header bg-white fw-bold text-dark py-2">
+                                    <i class="bi bi-layout-text-window-reverse me-1 text-primary"></i> 2. Header & Letterhead Layout
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Header Layout Style</label>
+                                            <select name="report_header_style" class="form-select">
+                                                <option value="standard" {{ setting('report_header_style', 'standard') == 'standard' ? 'selected' : '' }}>Standard (Logo & Details)</option>
+                                                <option value="center" {{ setting('report_header_style', 'standard') == 'center' ? 'selected' : '' }}>Centered Classic Letterhead</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_header_style]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Header Alignment</label>
+                                            <select name="report_header_align" class="form-select">
+                                                <option value="left" {{ setting('report_header_align', 'left') == 'left' ? 'selected' : '' }}>Left Aligned</option>
+                                                <option value="center" {{ setting('report_header_align', 'left') == 'center' ? 'selected' : '' }}>Centered</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_header_align]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Show School Logo</label>
+                                            <select name="report_show_logo" class="form-select">
+                                                <option value="1" {{ setting('report_show_logo', '1') == '1' ? 'selected' : '' }}>Yes, Show Logo</option>
+                                                <option value="0" {{ setting('report_show_logo', '1') == '0' ? 'selected' : '' }}>No, Hide Logo</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_show_logo]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Logo Position & Height</label>
+                                            <div class="input-group">
+                                                <select name="report_logo_position" class="form-select" style="max-width: 50%;">
+                                                    <option value="left" {{ setting('report_logo_position', 'left') == 'left' ? 'selected' : '' }}>Left</option>
+                                                    <option value="right" {{ setting('report_logo_position', 'left') == 'right' ? 'selected' : '' }}>Right</option>
+                                                </select>
+                                                <input type="text" name="report_logo_height" class="form-control" value="{{ setting('report_logo_height', '70px') }}" placeholder="70px">
+                                            </div>
+                                            <input type="hidden" name="_groups[report_logo_position]" value="reports">
+                                            <input type="hidden" name="_groups[report_logo_height]" value="reports">
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Show Address in Header</label>
+                                            <select name="report_header_show_address" class="form-select">
+                                                <option value="1" {{ setting('report_header_show_address', '1') == '1' ? 'selected' : '' }}>Yes</option>
+                                                <option value="0" {{ setting('report_header_show_address', '1') == '0' ? 'selected' : '' }}>No</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_header_show_address]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Show Phone/Email/Web</label>
+                                            <select name="report_header_show_contact" class="form-select">
+                                                <option value="1" {{ setting('report_header_show_contact', '1') == '1' ? 'selected' : '' }}>Yes</option>
+                                                <option value="0" {{ setting('report_header_show_contact', '1') == '0' ? 'selected' : '' }}>No</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_header_show_contact]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Show Affil / Codes</label>
+                                            <select name="report_header_show_affiliation" class="form-select">
+                                                <option value="1" {{ setting('report_header_show_affiliation', '1') == '1' ? 'selected' : '' }}>Yes</option>
+                                                <option value="0" {{ setting('report_header_show_affiliation', '1') == '0' ? 'selected' : '' }}>No</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_header_show_affiliation]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Header Bottom Border</label>
+                                            <select name="report_header_bottom_border" class="form-select">
+                                                <option value="1" {{ setting('report_header_bottom_border', '1') == '1' ? 'selected' : '' }}>Yes, Colored Border</option>
+                                                <option value="0" {{ setting('report_header_bottom_border', '1') == '0' ? 'selected' : '' }}>No Border</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_header_bottom_border]" value="reports">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Watermark Engine -->
+                            <div class="card mb-4 border-0 shadow-sm bg-light">
+                                <div class="card-header bg-white fw-bold text-dark py-2">
+                                    <i class="bi bi-shield-check me-1 text-primary"></i> 3. Security Watermark Engine
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Watermark Mode</label>
+                                            <select name="report_watermark_type" class="form-select">
+                                                <option value="none" {{ setting('report_watermark_type', 'text') == 'none' ? 'selected' : '' }}>Disabled (None)</option>
+                                                <option value="text" {{ setting('report_watermark_type', 'text') == 'text' ? 'selected' : '' }}>Text Watermark</option>
+                                                <option value="image" {{ setting('report_watermark_type', 'text') == 'image' ? 'selected' : '' }}>Image Watermark (Upload Below)</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_watermark_type]" value="reports">
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label class="form-label fw-bold">Watermark Text</label>
+                                            <input type="text" name="report_watermark_text" class="form-control" value="{{ setting('report_watermark_text', setting('organization_name', 'DOORKNOB ACADEMY')) }}">
+                                            <input type="hidden" name="_groups[report_watermark_text]" value="reports">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">Upload Custom Watermark Image</label>
+                                            <input type="file" name="report_watermark_image" class="form-control" accept="image/*">
+                                            <input type="hidden" name="_groups[report_watermark_image]" value="reports">
+                                            @if(setting('report_watermark_image'))
+                                                <small class="text-success d-block mt-1"><i class="bi bi-check-circle"></i> Custom watermark file active</small>
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Watermark Opacity (0.02 - 0.25)</label>
+                                            <input type="number" step="0.01" min="0.01" max="0.5" name="report_watermark_opacity" class="form-control" value="{{ setting('report_watermark_opacity', '0.08') }}">
+                                            <input type="hidden" name="_groups[report_watermark_opacity]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Rotation Angle</label>
+                                            <input type="number" step="1" name="report_watermark_rotation" class="form-control" value="{{ setting('report_watermark_rotation', '-30') }}" placeholder="-30">
+                                            <input type="hidden" name="_groups[report_watermark_rotation]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Font Size</label>
+                                            <input type="text" name="report_watermark_font_size" class="form-control" value="{{ setting('report_watermark_font_size', '60px') }}">
+                                            <input type="hidden" name="_groups[report_watermark_font_size]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Watermark Color</label>
+                                            <input type="color" name="report_watermark_color" class="form-control form-control-color w-100" value="{{ setting('report_watermark_color', '#000000') }}">
+                                            <input type="hidden" name="_groups[report_watermark_color]" value="reports">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Digital Signatures & Official Stamp -->
+                            <div class="card mb-4 border-0 shadow-sm bg-light">
+                                <div class="card-header bg-white fw-bold text-dark py-2">
+                                    <i class="bi bi-pen me-1 text-primary"></i> 4. Institutional Signatures & Official Stamp
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Show Signature Block</label>
+                                            <select name="report_show_signatures" class="form-select">
+                                                <option value="1" {{ setting('report_show_signatures', '1') == '1' ? 'selected' : '' }}>Yes, Show Signatures</option>
+                                                <option value="0" {{ setting('report_show_signatures', '1') == '0' ? 'selected' : '' }}>No, Hide</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_show_signatures]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Show Official Stamp / Seal</label>
+                                            <select name="report_show_stamp" class="form-select">
+                                                <option value="1" {{ setting('report_show_stamp', '1') == '1' ? 'selected' : '' }}>Yes, Show Seal</option>
+                                                <option value="0" {{ setting('report_show_stamp', '1') == '0' ? 'selected' : '' }}>No, Hide Seal</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_show_stamp]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Signature 1 Label</label>
+                                            <input type="text" name="report_signature_label_1" class="form-control" value="{{ setting('report_signature_label_1', 'Principal Signature') }}">
+                                            <input type="hidden" name="_groups[report_signature_label_1]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Signature 2 Label</label>
+                                            <input type="text" name="report_signature_label_2" class="form-control" value="{{ setting('report_signature_label_2', 'Authorized Signatory') }}">
+                                            <input type="hidden" name="_groups[report_signature_label_2]" value="reports">
+                                        </div>
+
+                                        <!-- Uploads for Principal, Authorized Signatory, and Stamp -->
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">Principal Signature Image</label>
+                                            <input type="file" name="report_principal_signature" class="form-control" accept="image/*">
+                                            <input type="hidden" name="_groups[report_principal_signature]" value="reports">
+                                            @if(setting_asset('report_principal_signature'))
+                                                <div class="mt-2 p-2 border rounded bg-white text-center">
+                                                    <img src="{{ setting_asset('report_principal_signature') }}" alt="Principal Signature" style="max-height: 40px;">
+                                                    <small class="text-muted d-block mt-1">Current Principal Signature</small>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">Authorized Signatory Image</label>
+                                            <input type="file" name="report_authorized_signature" class="form-control" accept="image/*">
+                                            <input type="hidden" name="_groups[report_authorized_signature]" value="reports">
+                                            @if(setting_asset('report_authorized_signature'))
+                                                <div class="mt-2 p-2 border rounded bg-white text-center">
+                                                    <img src="{{ setting_asset('report_authorized_signature') }}" alt="Authorized Signature" style="max-height: 40px;">
+                                                    <small class="text-muted d-block mt-1">Current Authorized Signature</small>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">Official School Stamp / Seal</label>
+                                            <input type="file" name="report_school_stamp" class="form-control" accept="image/*">
+                                            <input type="hidden" name="_groups[report_school_stamp]" value="reports">
+                                            @if(setting_asset('report_school_stamp'))
+                                                <div class="mt-2 p-2 border rounded bg-white text-center">
+                                                    <img src="{{ setting_asset('report_school_stamp') }}" alt="School Stamp" style="max-height: 48px;">
+                                                    <small class="text-muted d-block mt-1">Current Institutional Stamp</small>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. Typography, Colors & Table Styling -->
+                            <div class="card mb-4 border-0 shadow-sm bg-light">
+                                <div class="card-header bg-white fw-bold text-dark py-2">
+                                    <i class="bi bi-palette me-1 text-primary"></i> 5. Typography, Styling & Colors
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">Report Font Family</label>
+                                            <select name="report_font_family" class="form-select">
+                                                <option value="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" {{ setting('report_font_family') == "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" ? 'selected' : '' }}>Modern Clean (Segoe UI / Roboto)</option>
+                                                <option value="'Inter', -apple-system, sans-serif" {{ setting('report_font_family') == "'Inter', -apple-system, sans-serif" ? 'selected' : '' }}>Inter (Clean Tech)</option>
+                                                <option value="'DejaVu Sans', sans-serif" {{ setting('report_font_family') == "'DejaVu Sans', sans-serif" ? 'selected' : '' }}>DejaVu Sans (High Compatibility)</option>
+                                                <option value="Georgia, serif" {{ setting('report_font_family') == "Georgia, serif" ? 'selected' : '' }}>Georgia (Classic Formal Serif)</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_font_family]" value="reports">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label fw-bold">Base Font Size</label>
+                                            <input type="text" name="report_font_size" class="form-control" value="{{ setting('report_font_size', '13px') }}">
+                                            <input type="hidden" name="_groups[report_font_size]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Report Primary Accent</label>
+                                            <input type="color" name="report_primary_color" class="form-control form-control-color w-100" value="{{ setting('report_primary_color', '#0d6efd') }}">
+                                            <input type="hidden" name="_groups[report_primary_color]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Table Header Color</label>
+                                            <input type="color" name="report_table_header_bg" class="form-control form-control-color w-100" value="{{ setting('report_table_header_bg', '#0d6efd') }}">
+                                            <input type="hidden" name="_groups[report_table_header_bg]" value="reports">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 6. Paper Layout, Margins & Footer -->
+                            <div class="card mb-4 border-0 shadow-sm bg-light">
+                                <div class="card-header bg-white fw-bold text-dark py-2">
+                                    <i class="bi bi-file-earmark-ruled me-1 text-primary"></i> 6. Paper Size, Margins & Footer
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Paper Size</label>
+                                            <select name="report_paper_size" class="form-select">
+                                                <option value="A4" {{ setting('report_paper_size', 'A4') == 'A4' ? 'selected' : '' }}>A4 (210 x 297 mm)</option>
+                                                <option value="Letter" {{ setting('report_paper_size', 'A4') == 'Letter' ? 'selected' : '' }}>US Letter (8.5 x 11 in)</option>
+                                                <option value="Legal" {{ setting('report_paper_size', 'A4') == 'Legal' ? 'selected' : '' }}>US Legal (8.5 x 14 in)</option>
+                                                <option value="A5" {{ setting('report_paper_size', 'A4') == 'A5' ? 'selected' : '' }}>A5 (148 x 210 mm)</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_paper_size]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Default Orientation</label>
+                                            <select name="report_orientation" class="form-select">
+                                                <option value="portrait" {{ setting('report_orientation', 'portrait') == 'portrait' ? 'selected' : '' }}>Portrait (Vertical)</option>
+                                                <option value="landscape" {{ setting('report_orientation', 'portrait') == 'landscape' ? 'selected' : '' }}>Landscape (Horizontal)</option>
+                                            </select>
+                                            <input type="hidden" name="_groups[report_orientation]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Top & Bottom Margins</label>
+                                            <div class="input-group">
+                                                <input type="text" name="report_margin_top" class="form-control" value="{{ setting('report_margin_top', '10mm') }}" placeholder="Top">
+                                                <input type="text" name="report_margin_bottom" class="form-control" value="{{ setting('report_margin_bottom', '10mm') }}" placeholder="Bottom">
+                                            </div>
+                                            <input type="hidden" name="_groups[report_margin_top]" value="reports">
+                                            <input type="hidden" name="_groups[report_margin_bottom]" value="reports">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">Left & Right Margins</label>
+                                            <div class="input-group">
+                                                <input type="text" name="report_margin_left" class="form-control" value="{{ setting('report_margin_left', '10mm') }}" placeholder="Left">
+                                                <input type="text" name="report_margin_right" class="form-control" value="{{ setting('report_margin_right', '10mm') }}" placeholder="Right">
+                                            </div>
+                                            <input type="hidden" name="_groups[report_margin_left]" value="reports">
+                                            <input type="hidden" name="_groups[report_margin_right]" value="reports">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Report Footer Disclaimer</label>
+                                            <input type="text" name="report_footer_text" class="form-control" value="{{ setting('report_footer_text', 'This is a computer-generated document. Official verified record.') }}">
+                                            <input type="hidden" name="_groups[report_footer_text]" value="reports">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Additional Custom Footer Note</label>
+                                            <input type="text" name="report_footer_custom_text" class="form-control" value="{{ setting('report_footer_custom_text', '') }}" placeholder="e.g. Valid only with authentic institution stamp and authorized signature.">
+                                            <input type="hidden" name="_groups[report_footer_custom_text]" value="reports">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 7. Interactive Live Preview Frame -->
+                            <div class="card mb-4 border shadow-sm">
+                                <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                    <span class="fw-bold text-dark"><i class="bi bi-display me-1 text-primary"></i> Live Interactive Report Preview</span>
+                                    <div>
+                                        <a href="{{ route('reports.base.preview') }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-box-arrow-up-right me-1"></i> Open Fullscreen</a>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0 bg-secondary bg-opacity-10">
+                                    <iframe src="{{ route('reports.settings.preview') }}" style="width: 100%; height: 600px; border: none;" title="Report Preview"></iframe>
                                 </div>
                             </div>
                         @endif

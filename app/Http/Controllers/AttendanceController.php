@@ -13,11 +13,13 @@ use App\Http\Requests\AttendanceStoreRequest;
 use App\Interfaces\SectionInterface;
 use App\Repositories\AttendanceRepository;
 use App\Repositories\CourseRepository;
+use App\Repositories\AssignedTeacherRepository;
 use App\Traits\SchoolSession;
+use App\Traits\AssignedTeacherCheck;
 
 class AttendanceController extends Controller
 {
-    use SchoolSession;
+    use SchoolSession, AssignedTeacherCheck;
     protected $academicSettingRepository;
     protected $schoolSessionRepository;
     protected $schoolClassRepository;
@@ -46,22 +48,36 @@ class AttendanceController extends Controller
      */
     public function index()
     {
-        return back();
-        // $academic_setting = $this->academicSettingRepository->getAcademicSetting();
+        $academic_setting = $this->academicSettingRepository->getAcademicSetting();
 
-        // $current_school_session_id = $this->getSchoolCurrentSession();
+        $current_school_session_id = $this->getSchoolCurrentSession();
 
-        // $classes_and_sections = $this->schoolClassRepository->getClassesAndSections($current_school_session_id);
-        // $courseRepository = new CourseRepository();
-        // $courses = $courseRepository->getAll($current_school_session_id);
+        $classes_and_sections = $this->schoolClassRepository->getClassesAndSections($current_school_session_id);
+        $courseRepository = new CourseRepository();
+        $courses = $courseRepository->getAll($current_school_session_id);
 
-        // $data = [
-        //     'academic_setting'      => $academic_setting,
-        //     'classes_and_sections'  => $classes_and_sections,
-        //     'courses'               => $courses,
-        // ];
+        if (auth()->user()->effective_role == 'teacher') {
+            $assignedTeacherRepository = new AssignedTeacherRepository();
+            $assignedTeacherCourses = $assignedTeacherRepository->getTeacherCourses($current_school_session_id, auth()->user()->id, 0);
+            $assignedClassIds = $assignedTeacherCourses->pluck('class_id')->unique()->toArray();
+            $assignedCourseIds = $assignedTeacherCourses->pluck('course_id')->unique()->toArray();
 
-        // return view('attendances.index', $data);
+            $classes_and_sections['school_classes'] = $classes_and_sections['school_classes']->filter(function($c) use ($assignedClassIds) {
+                return in_array($c->id, $assignedClassIds);
+            });
+
+            $courses = $courses->filter(function($crs) use ($assignedCourseIds) {
+                return in_array($crs->id, $assignedCourseIds);
+            });
+        }
+
+        $data = [
+            'academic_setting'      => $academic_setting,
+            'classes_and_sections'  => $classes_and_sections,
+            'courses'               => $courses,
+        ];
+
+        return view('attendances.index', $data);
     }
 
     /**
@@ -76,8 +92,10 @@ class AttendanceController extends Controller
             return abort(404);
         }
         try{
-            $academic_setting = $this->academicSettingRepository->getAcademicSetting();
             $current_school_session_id = $this->getSchoolCurrentSession();
+            $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+
+            $academic_setting = $this->academicSettingRepository->getAcademicSetting();
 
             $class_id = $request->query('class_id');
             $section_id = $request->query('section_id', 0);
@@ -106,6 +124,8 @@ class AttendanceController extends Controller
             ];
 
             return view('attendances.take', $data);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
         }
@@ -120,6 +140,14 @@ class AttendanceController extends Controller
     public function store(AttendanceStoreRequest $request)
     {
         try {
+            $current_school_session_id = $this->getSchoolCurrentSession();
+            $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+
+            $latestSession = $this->schoolSessionRepository->getLatestSession();
+            if ($request->session_id != $latestSession->id && !auth()->user()->isAdminOrSuperAdmin()) {
+                return back()->withError('Previous academic sessions are read-only and cannot be modified.');
+            }
+
             $attendanceRepository = new AttendanceRepository();
             $attendanceRepository->saveAttendance($request->validated());
 
@@ -142,6 +170,7 @@ class AttendanceController extends Controller
         }
 
         $current_school_session_id = $this->getSchoolCurrentSession();
+        $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
 
         $class_id = $request->query('class_id');
         $section_id = $request->query('section_id');
@@ -165,7 +194,7 @@ class AttendanceController extends Controller
     }
 
     public function showStudentAttendance($id) {
-        if(auth()->user()->role == "student" && auth()->user()->id != $id) {
+        if(auth()->user()->effective_role == "student" && auth()->user()->id != $id) {
             return abort(404);
         }
         $current_school_session_id = $this->getSchoolCurrentSession();
