@@ -54,10 +54,51 @@
                 @if(Auth::user()->effective_role == "student")
                     <a class="nav-link {{ request()->routeIs('student.attendance.show')? 'active' : '' }}" href="{{route('student.attendance.show', ['id' => Auth::user()->id])}}"><i class="bi bi-calendar2-week"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Attendance</span></a>
                 @else
-                    <a class="nav-link {{ request()->is('attendances*')? 'active' : '' }}" href="{{route('attendance.index')}}"><i class="bi bi-calendar2-week"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Attendance</span></a>
+                    <a class="nav-link {{ request()->is('attendances*')? 'active' : '' }}" href="{{route('attendance.index')}}"><i class="bi bi-calendar2-week"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Attendance (Manual)</span></a>
                 @endif
             </li>
             @endcan
+
+            @php
+                $biometricEnabled = app(\App\Services\SettingService::class)->get('biometric_attendance_enabled', '1') == '1';
+            @endphp
+
+            @if($biometricEnabled)
+                @if(Auth::user()->isAdminOrSuperAdmin() || Auth::user()->effective_role == "teacher")
+                <li class="nav-item">
+                    <a type="button" href="#biometric-submenu" data-bs-toggle="collapse" class="d-flex nav-link {{ request()->is('biometric*')? 'active' : '' }}"><i class="bi bi-fingerprint text-primary"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline fw-bold text-primary">Biometric</span>
+                        <i class="ms-auto d-inline d-sm-none d-md-none d-xl-inline bi bi-chevron-down"></i>
+                    </a>
+                    <ul class="nav collapse {{ request()->is('biometric*')? 'show' : 'hide' }} bg-white" id="biometric-submenu">
+                        <li class="nav-item w-100" {{ request()->routeIs('biometric.dashboard')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('biometric.dashboard')}}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
+                        <li class="nav-item w-100" {{ request()->routeIs('biometric.today')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('biometric.today')}}"><i class="bi bi-calendar-check me-2"></i> Today's Attendance</a></li>
+                        @if(Auth::user()->isAdminOrSuperAdmin())
+                        <li class="nav-item w-100" {{ request()->routeIs('biometric.devices.*')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('biometric.devices.index')}}"><i class="bi bi-hdd-network me-2"></i> Devices</a></li>
+                        <li class="nav-item w-100" {{ request()->routeIs('biometric.enrollment.*')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('biometric.enrollment.index')}}"><i class="bi bi-person-badge me-2"></i> Student Enrollment</a></li>
+                        <li class="nav-item w-100" {{ request()->routeIs('biometric.punches')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('biometric.punches')}}"><i class="bi bi-journal-text me-2"></i> Raw Punch Logs</a></li>
+                        <li class="nav-item w-100" {{ request()->routeIs('biometric.settings.*')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('biometric.settings.index')}}"><i class="bi bi-sliders me-2"></i> Attendance Rules</a></li>
+                        @endif
+                        <li class="nav-item w-100" {{ request()->routeIs('biometric.reports.*')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('biometric.reports.index')}}"><i class="bi bi-bar-chart-line me-2"></i> Attendance Reports</a></li>
+                    </ul>
+                </li>
+                @endif
+
+                <li class="nav-item">
+                    <a type="button" href="#leave-submenu" data-bs-toggle="collapse" class="d-flex nav-link {{ request()->is('leaves*')? 'active' : '' }}"><i class="bi bi-envelope-paper"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline">Leave Mgmt</span>
+                        <i class="ms-auto d-inline d-sm-none d-md-none d-xl-inline bi bi-chevron-down"></i>
+                    </a>
+                    <ul class="nav collapse {{ request()->is('leaves*')? 'show' : 'hide' }} bg-white" id="leave-submenu">
+                        @if(Auth::user()->effective_role == 'student')
+                        <li class="nav-item w-100" {{ request()->routeIs('leaves.my-leaves')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('leaves.my-leaves')}}"><i class="bi bi-clock-history me-2"></i> My Leaves</a></li>
+                        @else
+                        <li class="nav-item w-100" {{ request()->routeIs('leaves.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('leaves.index')}}"><i class="bi bi-list-check me-2"></i> Leave Requests</a></li>
+                        @if(Auth::user()->isAdminOrSuperAdmin())
+                        <li class="nav-item w-100" {{ request()->routeIs('leaves.types')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('leaves.types')}}"><i class="bi bi-tags me-2"></i> Leave Types</a></li>
+                        @endif
+                        @endif
+                    </ul>
+                </li>
+            @endif
 
             @if(Auth::user()->effective_role == "student")
             <li class="nav-item">

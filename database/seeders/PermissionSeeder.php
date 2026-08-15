@@ -41,7 +41,8 @@ class PermissionSeeder extends Seeder
             'view academic settings', 'update marks submission window', 'update browse by session',
             'create classes', 'view classes', 'edit classes',
             'create sections', 'view sections', 'edit sections',
-            'view payments', 'collect fees', 'manage expenses', 'view reports', 'view transactions', 'send fee reminder'
+            'view payments', 'collect fees', 'manage expenses', 'view reports', 'view transactions', 'send fee reminder',
+            'manage biometric devices', 'sync biometric attendance', 'view biometric logs', 'manage student leaves', 'approve student leaves', 'correct attendance'
         ];
 
         foreach ($permissions as $permissionName) {

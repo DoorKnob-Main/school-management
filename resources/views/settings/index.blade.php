@@ -956,6 +956,16 @@
                                 </div>
 
                                 <div class="col-md-4">
+                                    <label class="form-label font-weight-bold"><i class="bi bi-fingerprint text-primary me-1"></i> Biometric Attendance Feature</label>
+                                    <select name="biometric_attendance_enabled" class="form-select">
+                                        <option value="1" {{ setting('biometric_attendance_enabled', '1') == '1' ? 'selected' : '' }}>Enabled (Active)</option>
+                                        <option value="0" {{ setting('biometric_attendance_enabled', '1') == '0' ? 'selected' : '' }}>Disabled (Hidden / Access Denied)</option>
+                                    </select>
+                                    <input type="hidden" name="_groups[biometric_attendance_enabled]" value="system">
+                                    <small class="text-muted">Global toggle to enable or grant biometric feature access.</small>
+                                </div>
+
+                                <div class="col-md-4">
                                     <label class="form-label font-weight-bold">SMS Notifications</label>
                                     <select name="sms_enabled" class="form-select">
                                         <option value="1" {{ setting('sms_enabled', '1') == '1' ? 'selected' : '' }}>Enabled</option>
