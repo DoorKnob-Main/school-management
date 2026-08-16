@@ -25,7 +25,37 @@ class Attendance extends Model
         'session_id',
         'course_id',
         'status',
+        'in_time',
+        'out_time',
+        'attendance_source',
+        'late_minutes',
+        'early_leave_minutes',
+        'is_corrected',
+        'corrected_by',
+        'correction_reason',
+        'remarks',
     ];
+
+    protected $casts = [
+        'in_time' => 'datetime',
+        'out_time' => 'datetime',
+        'is_corrected' => 'boolean',
+        'late_minutes' => 'integer',
+        'early_leave_minutes' => 'integer',
+        'student_id' => 'integer',
+        'class_id' => 'integer',
+        'section_id' => 'integer',
+        'session_id' => 'integer',
+        'course_id' => 'integer',
+    ];
+
+    /**
+     * Get the user who corrected this attendance record.
+     */
+    public function correctedBy()
+    {
+        return $this->belongsTo(User::class, 'corrected_by');
+    }
 
     /**
      * Get the student for attendances.

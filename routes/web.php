@@ -32,6 +32,11 @@ use App\Http\Controllers\FeeReminderController;
 use App\Http\Controllers\FeeStructureController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\BiometricDeviceController;
+use App\Http\Controllers\BiometricEnrollmentController;
+use App\Http\Controllers\BiometricAttendanceController;
+use App\Http\Controllers\StudentLeaveController;
+use App\Http\Controllers\BiometricReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -237,5 +242,64 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('super-admin')->name('super-admin.')->group(function () {
         Route::post('/switch-role', [SuperAdminController::class, 'switchRole'])->name('switch-role');
         Route::post('/exit-impersonation', [SuperAdminController::class, 'exitImpersonation'])->name('exit-impersonation');
+    });
+
+    // Biometric Attendance Module
+    Route::prefix('biometric')->name('biometric.')->group(function () {
+        // Dashboard & Today's Attendance
+        Route::get('/dashboard', [BiometricAttendanceController::class, 'dashboard'])->name('dashboard');
+        Route::get('/today', [BiometricAttendanceController::class, 'today'])->name('today');
+        Route::get('/punches', [BiometricAttendanceController::class, 'punchLogs'])->name('punches');
+        Route::post('/correct', [BiometricAttendanceController::class, 'correctAttendance'])->name('correct');
+        Route::post('/recalculate', [BiometricAttendanceController::class, 'recalculate'])->name('recalculate');
+
+        // Settings (School timing, windows, etc.)
+        Route::get('/settings', [BiometricAttendanceController::class, 'settings'])->name('settings.index');
+        Route::post('/settings/update', [BiometricAttendanceController::class, 'updateSettings'])->name('settings.update');
+
+        // Devices Management
+        Route::get('/devices', [BiometricDeviceController::class, 'index'])->name('devices.index');
+        Route::post('/devices/store', [BiometricDeviceController::class, 'store'])->name('devices.store');
+        Route::put('/devices/update/{id}', [BiometricDeviceController::class, 'update'])->name('devices.update');
+        Route::delete('/devices/destroy/{id}', [BiometricDeviceController::class, 'destroy'])->name('devices.destroy');
+        Route::post('/devices/test/{id}', [BiometricDeviceController::class, 'testConnection'])->name('devices.test');
+        Route::post('/devices/sync/{id}', [BiometricDeviceController::class, 'syncNow'])->name('devices.sync');
+        Route::post('/devices/sync-all', [BiometricDeviceController::class, 'syncAll'])->name('devices.sync-all');
+        Route::post('/devices/sync-time/{id}', [BiometricDeviceController::class, 'syncTime'])->name('devices.sync-time');
+        Route::post('/devices/unlock/{id}', [BiometricDeviceController::class, 'unlockDoor'])->name('devices.unlock');
+        Route::post('/devices/clear-logs/{id}', [BiometricDeviceController::class, 'clearLogs'])->name('devices.clear-logs');
+        Route::post('/devices/simulate/{id}', [BiometricDeviceController::class, 'simulatePunches'])->name('devices.simulate');
+        Route::get('/devices/users/{id}', [BiometricDeviceController::class, 'fetchDeviceUsers'])->name('devices.users');
+        Route::post('/devices/delete-user/{id}', [BiometricDeviceController::class, 'deleteDeviceUser'])->name('devices.delete-user');
+
+        // Student Device Enrollment & Mappings
+        Route::get('/enrollment', [BiometricEnrollmentController::class, 'index'])->name('enrollment.index');
+        Route::post('/enrollment/enroll', [BiometricEnrollmentController::class, 'enroll'])->name('enrollment.enroll');
+        Route::delete('/enrollment/unenroll/{id}', [BiometricEnrollmentController::class, 'unenroll'])->name('enrollment.unenroll');
+        Route::get('/enrollment/unmapped', [BiometricEnrollmentController::class, 'unmapped'])->name('enrollment.unmapped');
+        Route::post('/enrollment/map-user', [BiometricEnrollmentController::class, 'mapUser'])->name('enrollment.map-user');
+
+        // Biometric Attendance Reports
+        Route::get('/reports', [BiometricReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/student', [BiometricReportController::class, 'studentReport'])->name('reports.student');
+        Route::get('/reports/class', [BiometricReportController::class, 'classReport'])->name('reports.class');
+        Route::get('/reports/late', [BiometricReportController::class, 'lateReport'])->name('reports.late');
+        Route::get('/reports/early', [BiometricReportController::class, 'earlyReport'])->name('reports.early');
+        Route::get('/reports/missing-checkout', [BiometricReportController::class, 'missingCheckoutReport'])->name('reports.missing-checkout');
+    });
+
+    // Leave Management Module
+    Route::prefix('leaves')->name('leaves.')->group(function () {
+        Route::get('/', [StudentLeaveController::class, 'index'])->name('index');
+        Route::post('/apply', [StudentLeaveController::class, 'store'])->name('apply');
+        Route::post('/approve/{id}', [StudentLeaveController::class, 'approve'])->name('approve');
+        Route::post('/reject/{id}', [StudentLeaveController::class, 'reject'])->name('reject');
+        Route::get('/my-leaves', [StudentLeaveController::class, 'myLeaves'])->name('my-leaves');
+
+        // Leave Types (Admin Only)
+        Route::get('/types', [StudentLeaveController::class, 'typesIndex'])->name('types');
+        Route::post('/types/store', [StudentLeaveController::class, 'storeType'])->name('types.store');
+        Route::put('/types/update/{id}', [StudentLeaveController::class, 'updateType'])->name('types.update');
+        Route::delete('/types/destroy/{id}', [StudentLeaveController::class, 'destroyType'])->name('types.destroy');
     });
 });

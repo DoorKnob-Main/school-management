@@ -178,7 +178,39 @@ class SuperAdminSeeder extends Seeder
             // Advanced / Custom Code
             ['key' => 'custom_css', 'value' => '', 'group' => 'advanced', 'type' => 'textarea'],
             ['key' => 'custom_js', 'value' => '', 'group' => 'advanced', 'type' => 'textarea'],
+
+            // Biometric Attendance & Timing
+            ['key' => 'biometric_attendance_enabled', 'value' => '1', 'group' => 'attendance', 'type' => 'boolean'],
+            ['key' => 'school_start_time', 'value' => '08:30', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'school_end_time', 'value' => '14:30', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'present_window_start', 'value' => '08:00', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'present_window_end', 'value' => '08:45', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'late_window_start', 'value' => '08:46', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'late_window_end', 'value' => '09:15', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'school_leave_time', 'value' => '14:30', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'early_leave_threshold', 'value' => '14:15', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'auto_absent_after', 'value' => '09:15', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'use_first_punch_as_in', 'value' => '1', 'group' => 'attendance', 'type' => 'boolean'],
+            ['key' => 'use_last_punch_as_out', 'value' => '1', 'group' => 'attendance', 'type' => 'boolean'],
+            ['key' => 'multiple_punches_mode', 'value' => 'first_last', 'group' => 'attendance', 'type' => 'text'],
+            ['key' => 'working_days', 'value' => '["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]', 'group' => 'attendance', 'type' => 'text'],
         ];
+
+        // Seed Default Leave Types
+        $defaultLeaveTypes = [
+            ['name' => 'Medical Leave', 'code' => 'MED', 'description' => 'Leave for sickness, medical treatment or health recovery.'],
+            ['name' => 'Casual Leave', 'code' => 'CL', 'description' => 'Short planned personal or family leave.'],
+            ['name' => 'Emergency Leave', 'code' => 'EMG', 'description' => 'Urgent unexpected family or personal circumstances.'],
+            ['name' => 'Family Function', 'code' => 'FAM', 'description' => 'Attendance at wedding, festival, or family ceremony.'],
+            ['name' => 'Other / Special', 'code' => 'OTH', 'description' => 'Special permission authorized by School Administration.'],
+        ];
+
+        foreach ($defaultLeaveTypes as $lt) {
+            \App\Models\LeaveType::firstOrCreate(
+                ['code' => $lt['code']],
+                $lt
+            );
+        }
 
         foreach ($defaultSettings as $setting) {
             Setting::firstOrCreate(

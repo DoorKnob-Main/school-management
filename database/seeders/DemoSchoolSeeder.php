@@ -750,7 +750,8 @@ class DemoSchoolSeeder extends Seeder
             $crsObj = Course::where('class_id', $cObj->id)->first();
 
             foreach ($promotions as $idx => $prom) {
-                // Section Attendance
+                $isAbsent = ($idx % 7 == 0);
+                // Daily Section Attendance
                 Attendance::updateOrCreate(
                     [
                         'session_id'  => $currSessionId,
@@ -761,12 +762,12 @@ class DemoSchoolSeeder extends Seeder
                         'created_at'  => Carbon::today()->toDateTimeString(),
                     ],
                     [
-                        'status'     => ($idx % 7 == 0) ? 'off' : 'on',
+                        'status'     => $isAbsent ? 'off' : 'on',
                         'updated_at' => Carbon::today()->toDateTimeString(),
                     ]
                 );
 
-                // Course Attendance
+                // Course Attendance (Previous Period)
                 if ($crsObj) {
                     Attendance::updateOrCreate(
                         [
@@ -775,11 +776,11 @@ class DemoSchoolSeeder extends Seeder
                             'section_id'  => $prom->section_id,
                             'student_id'  => $prom->student_id,
                             'course_id'   => $crsObj->id,
-                            'created_at'  => Carbon::today()->toDateTimeString(),
+                            'created_at'  => Carbon::yesterday()->toDateTimeString(),
                         ],
                         [
-                            'status'     => 'on',
-                            'updated_at' => Carbon::today()->toDateTimeString(),
+                            'status'     => $isAbsent ? 'off' : 'on',
+                            'updated_at' => Carbon::yesterday()->toDateTimeString(),
                         ]
                     );
                 }

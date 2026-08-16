@@ -134,6 +134,99 @@
                                         </tbody>
                                     </table>
                                 </div>
+
+                                @php
+                                    $biometricEnabled = app(\App\Services\SettingService::class)->get('biometric_attendance_enabled', '1') == '1';
+                                    $mappings = \App\Models\BiometricDeviceUserMapping::with('device')->where('student_id', $student->id)->get();
+                                    $activeDevices = \App\Models\BiometricDevice::active()->get();
+                                @endphp
+
+                                @if($biometricEnabled)
+                                <div class="p-3 mb-3 border rounded bg-white">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0"><i class="bi bi-fingerprint text-primary me-1"></i> Biometric Device Mappings</h6>
+                                        @if(Auth::user()->isAdminOrSuperAdmin() && $activeDevices->count() > 0)
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#enrollStudentModal">
+                                            <i class="bi bi-plus-lg me-1"></i> Enroll on Terminal
+                                        </button>
+                                        @endif
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr class="small text-muted text-uppercase">
+                                                    <th>Device</th>
+                                                    <th>Location</th>
+                                                    <th>Machine User ID</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($mappings as $map)
+                                                <tr>
+                                                    <td class="fw-semibold text-dark">{{ $map->device->name ?? 'Device' }}</td>
+                                                    <td class="text-muted">{{ $map->device->location ?? 'Main Entrance' }}</td>
+                                                    <td><span class="badge bg-light text-primary border font-monospace">#{{ $map->device_user_id }}</span></td>
+                                                    <td>
+                                                        <span class="badge {{ $map->enrollment_status === 'enrolled' ? 'bg-success' : 'bg-warning text-dark' }}">
+                                                            {{ ucfirst($map->enrollment_status) }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-3 text-muted small">Not enrolled on any biometric terminals yet.</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Enroll Modal in Profile -->
+                                @if(Auth::user()->isAdminOrSuperAdmin() && $activeDevices->count() > 0)
+                                <div class="modal fade" id="enrollStudentModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <form method="POST" action="{{ route('biometric.enrollment.enroll') }}" class="modal-content">
+                                            @csrf
+                                            <input type="hidden" name="student_id" value="{{ $student->id }}">
+                                            <div class="modal-header">
+                                                <h6 class="modal-title fw-bold">Enroll {{ $student->first_name }} to Machine</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Target Terminal</label>
+                                                    <select name="device_id" class="form-select" required>
+                                                        @foreach($activeDevices as $dev)
+                                                        <option value="{{ $dev->id }}">{{ $dev->name }} ({{ $dev->ip_address }})</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Machine User ID</label>
+                                                    <input type="number" name="device_user_id" class="form-control" value="{{ $student->id }}" required>
+                                                </div>
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">RFID Card No</label>
+                                                        <input type="number" name="card_number" class="form-control" placeholder="Optional">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">Device PIN</label>
+                                                        <input type="number" name="user_password" class="form-control" value="1234">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-cloud-upload me-1"></i> Register on Device</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                @endif
+                                @endif
                             </div>
                         </div>
                     </div>
