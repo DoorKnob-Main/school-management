@@ -14,42 +14,47 @@ class PaymentRepository implements PaymentInterface
 {
     public function getStudentFeeSummary($studentId, $sessionId)
     {
-        $studentFee = StudentFee::with(['feeStructure.installments'])
-            ->where('student_id', $studentId)
+        $promotion = Promotion::where('student_id', $studentId)
             ->where('session_id', $sessionId)
             ->first();
+        $currentClassId = $promotion->class_id ?? null;
 
         $feeStructure = null;
-        $totalFee = 0.00;
+
+        // Only consider StudentFee rows whose structure applies to the
+        // student's CURRENT class (or the session default) — ignores stale
+        // rows left behind from before a promotion/class change. If both a
+        // class-specific and a default row exist, the class-specific one wins.
+        $studentFee = StudentFee::with(['feeStructure.installments', 'feeStructure.components.componentType'])
+            ->where('student_id', $studentId)
+            ->where('session_id', $sessionId)
+            ->whereHas('feeStructure', function ($q) use ($currentClassId) {
+                $q->where('class_id', $currentClassId)->orWhereNull('class_id');
+            })
+            ->get()
+            ->sortByDesc(function ($sf) {
+                return $sf->feeStructure->class_id !== null;
+            })
+            ->first();
 
         if ($studentFee && $studentFee->feeStructure) {
             $feeStructure = $studentFee->feeStructure;
-            $totalFee = floatval($feeStructure->total_amount);
-        } else {
-            // Check if there is a default fee structure for the student's class
-            $promotion = Promotion::where('student_id', $studentId)
+        } elseif ($promotion) {
+            // No persisted assignment yet (e.g. legacy data) — resolve live.
+            $feeStructure = FeeStructure::with(['installments', 'components.componentType'])
                 ->where('session_id', $sessionId)
+                ->where('class_id', $currentClassId)
                 ->first();
 
-            if ($promotion) {
-                $classFeeStructure = FeeStructure::with('installments')
+            if (!$feeStructure) {
+                $feeStructure = FeeStructure::with(['installments', 'components.componentType'])
                     ->where('session_id', $sessionId)
-                    ->where('class_id', $promotion->class_id)
+                    ->whereNull('class_id')
                     ->first();
-
-                if (!$classFeeStructure) {
-                    $classFeeStructure = FeeStructure::with('installments')
-                        ->where('session_id', $sessionId)
-                        ->whereNull('class_id')
-                        ->first();
-                }
-
-                if ($classFeeStructure) {
-                    $feeStructure = $classFeeStructure;
-                    $totalFee = floatval($classFeeStructure->total_amount);
-                }
             }
         }
+
+        $totalFee = $feeStructure ? floatval($feeStructure->total_amount) : 0.00;
 
         $paidAmount = floatval(
             FeePayment::where('student_id', $studentId)

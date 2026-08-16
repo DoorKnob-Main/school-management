@@ -183,6 +183,7 @@
                     @endcan
                     @can('view reports')
                     <li class="nav-item w-100" {{ request()->routeIs('finance.reports.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('finance.reports.index')}}"><i class="bi bi-bar-chart-line me-2"></i> Reports</a></li>
+                    <li class="nav-item w-100" {{ request()->routeIs('finance.reports.due-students.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('finance.reports.due-students.index')}}"><i class="bi bi-exclamation-circle me-2"></i> Due Students</a></li>
                     @endcan
                     @can('send fee reminder')
                     <li class="nav-item w-100" {{ request()->routeIs('finance.fee-reminder.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('finance.fee-reminder.index')}}"><i class="bi bi-bell me-2"></i> Fee Reminder</a></li>

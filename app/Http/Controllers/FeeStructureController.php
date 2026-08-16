@@ -7,6 +7,7 @@ use App\Interfaces\FeeStructureInterface;
 use App\Interfaces\SchoolClassInterface;
 use App\Interfaces\SchoolSessionInterface;
 use App\Http\Requests\FeeStructureStoreRequest;
+use App\Models\FeeComponentType;
 use App\Traits\SchoolSession;
 use Illuminate\Http\Request;
 use Exception;
@@ -37,11 +38,13 @@ class FeeStructureController extends Controller
 
         $classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
         $structures = $this->feeStructureRepository->getAllBySession($current_school_session_id);
+        $componentTypes = FeeComponentType::where('is_active', true)->get();
 
         $data = [
             'current_school_session_id' => $current_school_session_id,
             'classes'    => $classes,
             'structures' => $structures,
+            'componentTypes' => $componentTypes,
         ];
 
         return view('finance.fee-structure.index', $data);

@@ -59,6 +59,14 @@
                                         @endforeach
                                     </select>
                                 </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">From Date</label>
+                                    <input type="date" name="from_date" class="form-control" value="{{$filters['from_date'] ?? ''}}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">To Date</label>
+                                    <input type="date" name="to_date" class="form-control" value="{{$filters['to_date'] ?? ''}}">
+                                </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold">Search</label>
                                     <input type="text" name="search" class="form-control" placeholder="Title, category, reference..." value="{{$filters['search'] ?? ''}}">
@@ -101,6 +109,7 @@
                                                 <td class="text-end fw-bold text-danger">₹{{number_format($exp->amount, 2)}}</td>
                                                 <td><small>{{$exp->creator->first_name ?? 'Admin'}}</small></td>
                                                 <td class="text-end">
+                                                    <a href="{{route('finance.expenses.voucher', $exp->id)}}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i> Voucher</a>
                                                     <form method="POST" action="{{route('finance.expenses.destroy', $exp->id)}}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this expense record?')">
                                                         @csrf
                                                         @method('DELETE')

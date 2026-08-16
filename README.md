@@ -135,6 +135,25 @@ With the improved Docker setup, you will get:
     - Email: admin@ut.com
     - Password: password
 
+### Using On-Premise (Client / Production) Setup
+
+This is the supported deployment for real school clients — everything (app, database, biometric bridge) runs on one Windows PC at the school, on the school's own network. See `[[project_deployment_model_a]]` reasoning if you have access to project memory, or the short version below.
+
+**Prerequisites:** [XAMPP](https://www.apachefriends.org) installed (bundles PHP + MySQL), MySQL service started from the XAMPP Control Panel.
+
+**Steps:**
+1. Copy the pre-built project folder (already includes `vendor/` and compiled `public/js`/`public/css` — no Composer/Node needed on the client machine) anywhere on the PC.
+2. Double-click `run_project.bat`. It will:
+   - Point `.env` at MySQL (`doorknob_school` database, XAMPP defaults)
+   - Create the database if missing
+   - Run migrations (safe to re-run — only applies new ones)
+   - Seed default accounts on first run only (never wipes existing data on later runs)
+   - Start the server on `http://0.0.0.0:8000`, reachable from any computer on the school's network
+3. (Recommended) Run `install_service.bat` once to register the app as a background Windows service (via [NSSM](https://nssm.cc/download)) so it survives reboots without a terminal window open.
+4. Set up `backup.bat` in Windows Task Scheduler to run nightly — dumps the database and zips the `storage/app` folder into `storage/backups`.
+
+Default logins are the same as above (`admin@ut.com` / `superadmin@ut.com`, password `password`) — **change these immediately** on a real client install.
+
 ## Steps to follow:
 Please carefully follow the steps to setup the school.
 

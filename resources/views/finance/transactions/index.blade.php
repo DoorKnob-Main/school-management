@@ -139,6 +139,7 @@
                                             <th>Payment Mode</th>
                                             <th class="text-end">Amount</th>
                                             <th>Created By</th>
+                                            <th>Document</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -174,10 +175,19 @@
                                                     {{$trx->transaction_type == 'income' ? '+' : '-'}}₹{{number_format($trx->amount, 2)}}
                                                 </td>
                                                 <td><small>{{$trx->creator->first_name ?? 'Admin'}}</small></td>
+                                                <td>
+                                                    @if($trx->transaction_type == 'income' && $trx->fee_payment_id)
+                                                        <a href="{{route('finance.fee-collection.receipt', $trx->fee_payment_id)}}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i> Receipt</a>
+                                                    @elseif($trx->transaction_type == 'expense' && $trx->expense_id)
+                                                        <a href="{{route('finance.expenses.voucher', $trx->expense_id)}}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i> Voucher</a>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="8" class="text-center py-4 text-muted">No transactions found matching your criteria.</td>
+                                                <td colspan="9" class="text-center py-4 text-muted">No transactions found matching your criteria.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>

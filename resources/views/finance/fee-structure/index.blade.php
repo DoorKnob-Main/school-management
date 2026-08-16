@@ -20,7 +20,8 @@
                                 </ol>
                             </nav>
                         </div>
-                        <div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('finance.fee-component-types.index') }}" class="btn btn-outline-secondary"><i class="bi bi-tags"></i> Manage Fee Components</a>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createStructureModal"><i class="bi bi-plus-circle"></i> Create Fee Structure</button>
                         </div>
                     </div>
@@ -42,6 +43,20 @@
                                         <p class="mb-2"><strong>Class:</strong> {{$struct->schoolClass->class_name ?? 'All Classes (Default)'}}</p>
                                         <p class="mb-3"><strong>Total Fee:</strong> <span class="fs-4 fw-bold text-success">₹{{number_format($struct->total_amount, 2)}}</span></p>
                                         <p class="small text-muted mb-3">{{$struct->description ?? 'No description provided.'}}</p>
+
+                                        @if($struct->components->count())
+                                        <h6 class="fw-bold text-secondary border-bottom pb-1"><i class="bi bi-pie-chart"></i> Fee Breakup</h6>
+                                        <ul class="list-group list-group-flush mb-3">
+                                            @foreach($struct->components as $comp)
+                                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                                    <span>{{ $comp->componentType->name ?? 'Component' }}</span>
+                                                    <span class="badge bg-light text-dark border fs-6">
+                                                        {{ $comp->componentType && $comp->componentType->isPercentage() ? number_format($comp->amount, 2).'%' : '₹'.number_format($comp->amount, 2) }}
+                                                    </span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                        @endif
 
                                         <h6 class="fw-bold text-secondary border-bottom pb-1"><i class="bi bi-list-nested"></i> Installments Breakdown</h6>
                                         <ul class="list-group list-group-flush mb-0">
@@ -114,6 +129,19 @@
                         <textarea name="description" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
                     </div>
 
+                    <!-- Fee Breakup Section (optional) -->
+                    <div class="border rounded p-3 bg-light mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-pie-chart"></i> Fee Breakup (optional)</h6>
+                            <button type="button" class="btn btn-sm btn-outline-success" id="btnAddComponent"><i class="bi bi-plus"></i> Add Component</button>
+                        </div>
+                        <p class="small text-muted mb-2">Split the fee into parts like Tuition, Transport, GST — or leave empty and just fill in the installments below.
+                            <a href="{{ route('finance.fee-component-types.index') }}" target="_blank">Manage components</a>.
+                        </p>
+
+                        <div id="components_wrapper"></div>
+                    </div>
+
                     <!-- Dynamic Installments Section -->
                     <div class="border rounded p-3 bg-light mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -158,13 +186,73 @@ document.addEventListener('DOMContentLoaded', function() {
     var instCount = 1;
     var wrapper = document.getElementById('installments_wrapper');
 
-    function calculateTotal() {
-        var total = 0;
-        document.querySelectorAll('.inst-amount').forEach(function(inp) {
-            total += parseFloat(inp.value || 0);
+    var componentTypes = @json($componentTypes->map(function($t) { return ['id' => $t->id, 'name' => $t->name, 'calc_type' => $t->calc_type]; }));
+    var compCount = 0;
+    var compWrapper = document.getElementById('components_wrapper');
+
+    function componentOptionsHtml() {
+        var html = '<option value="">Select component...</option>';
+        componentTypes.forEach(function(t) {
+            html += '<option value="' + t.id + '" data-calc-type="' + t.calc_type + '">' + t.name + (t.calc_type === 'percentage' ? ' (%)' : '') + '</option>';
         });
+        return html;
+    }
+
+    function calculateTotal() {
+        var fixedSubtotal = 0;
+        var percentTotal = 0;
+
+        compWrapper.querySelectorAll('.component-row').forEach(function(row) {
+            var select = row.querySelector('.comp-type');
+            var amountInput = row.querySelector('.comp-amount');
+            var amount = parseFloat(amountInput.value || 0);
+            var selectedOption = select.options[select.selectedIndex];
+            var calcType = selectedOption ? selectedOption.getAttribute('data-calc-type') : null;
+
+            if (calcType === 'percentage') {
+                percentTotal += amount;
+            } else if (calcType === 'fixed') {
+                fixedSubtotal += amount;
+            }
+        });
+
+        var componentsTotal = fixedSubtotal + (fixedSubtotal * percentTotal / 100);
+
+        var installmentsTotal = 0;
+        document.querySelectorAll('.inst-amount').forEach(function(inp) {
+            installmentsTotal += parseFloat(inp.value || 0);
+        });
+
+        // Components (if any) define the true total; installments are just the payment schedule.
+        var total = compWrapper.querySelectorAll('.component-row').length > 0 ? componentsTotal : installmentsTotal;
         document.getElementById('calculatedTotalFee').textContent = '₹' + total.toFixed(2);
     }
+
+    document.getElementById('btnAddComponent').addEventListener('click', function() {
+        var div = document.createElement('div');
+        div.className = 'row g-2 mb-2 component-row';
+        div.innerHTML = '<div class="col-md-6"><select name="components[' + compCount + '][fee_component_type_id]" class="form-select comp-type" required>' + componentOptionsHtml() + '</select></div>' +
+            '<div class="col-md-4"><input type="number" step="0.01" min="0" name="components[' + compCount + '][amount]" class="form-control comp-amount" placeholder="Amount / %" required></div>' +
+            '<div class="col-md-2 text-end"><button type="button" class="btn btn-outline-danger btn-remove-comp"><i class="bi bi-trash"></i></button></div>';
+        compWrapper.appendChild(div);
+        compCount++;
+
+        div.querySelector('.btn-remove-comp').addEventListener('click', function() {
+            div.remove();
+            calculateTotal();
+        });
+    });
+
+    compWrapper.addEventListener('input', function(e) {
+        if (e.target.classList.contains('comp-amount')) {
+            calculateTotal();
+        }
+    });
+    compWrapper.addEventListener('change', function(e) {
+        if (e.target.classList.contains('comp-type')) {
+            calculateTotal();
+        }
+    });
 
     wrapper.addEventListener('input', function(e) {
         if (e.target.classList.contains('inst-amount')) {

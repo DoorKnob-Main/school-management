@@ -30,6 +30,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FeeReminderController;
 use App\Http\Controllers\FeeStructureController;
+use App\Http\Controllers\FeeComponentTypeController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\BiometricDeviceController;
@@ -204,6 +205,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/fee-structure/store', [FeeStructureController::class, 'store'])->name('fee-structure.store');
         Route::delete('/fee-structure/destroy/{id}', [FeeStructureController::class, 'destroy'])->name('fee-structure.destroy');
 
+        // Fee Components (admin-configurable breakup: Tuition, GST, Transport, etc.)
+        Route::get('/fee-component-types', [FeeComponentTypeController::class, 'index'])->name('fee-component-types.index');
+        Route::post('/fee-component-types/store', [FeeComponentTypeController::class, 'store'])->name('fee-component-types.store');
+        Route::put('/fee-component-types/{id}', [FeeComponentTypeController::class, 'update'])->name('fee-component-types.update');
+        Route::delete('/fee-component-types/{id}', [FeeComponentTypeController::class, 'destroy'])->name('fee-component-types.destroy');
+
         // Transactions Ledger
         Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
 
@@ -211,11 +218,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::post('/expenses/store', [ExpenseController::class, 'store'])->name('expenses.store');
         Route::delete('/expenses/destroy/{id}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+        Route::get('/expenses/voucher/{id}', [ExpenseController::class, 'voucher'])->name('expenses.voucher');
+        Route::get('/expenses/voucher/{id}/pdf', [ExpenseController::class, 'voucherPdf'])->name('expenses.voucher-pdf');
 
         // Reports
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
         Route::get('/reports/preview', [ReportController::class, 'previewPdf'])->name('reports.preview');
+
+        // Due Students Report
+        Route::get('/reports/due-students', [ReportController::class, 'dueStudents'])->name('reports.due-students.index');
+        Route::get('/reports/due-students/pdf', [ReportController::class, 'dueStudentsPdf'])->name('reports.due-students.pdf');
+        Route::get('/reports/due-students/preview', [ReportController::class, 'dueStudentsPreview'])->name('reports.due-students.preview');
 
         // Fee Reminder
         Route::get('/fee-reminder', [FeeReminderController::class, 'index'])->name('fee-reminder.index');

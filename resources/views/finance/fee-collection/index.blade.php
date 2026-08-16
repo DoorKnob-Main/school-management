@@ -20,11 +20,20 @@
                                 </ol>
                             </nav>
                         </div>
-                        <div>
-                            <a href="{{route('finance.fee-structure.index')}}" class="btn btn-outline-secondary me-2"><i class="bi bi-gear"></i> Fee Structures</a>
-                            <a href="{{route('finance.fee-reminder.index')}}" class="btn btn-outline-warning me-2"><i class="bi bi-bell"></i> Send Reminder</a>
-                            <button onclick="window.print()" class="btn btn-outline-primary me-2"><i class="bi bi-printer"></i> Print</button>
-                            <button onclick="exportTableToCSV('fee-collection-table.csv')" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel"></i> Export CSV</button>
+                        <div class="d-flex gap-2">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots"></i> More
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="{{route('finance.fee-structure.index')}}"><i class="bi bi-gear me-2"></i>Fee Structures</a></li>
+                                    <li><a class="dropdown-item" href="{{route('finance.fee-reminder.index')}}"><i class="bi bi-bell me-2"></i>Send Reminder</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportTableToCSV('fee-collection-table.csv'); return false;"><i class="bi bi-file-earmark-excel me-2"></i>Export CSV</a></li>
+                                </ul>
+                            </div>
+                            <a href="{{ route('finance.reports.due-students.preview', ['class_id' => $selected_class_id ?: null, 'section_id' => $selected_section_id ?: null]) }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-printer"></i> Print
+                            </a>
                         </div>
                     </div>
 
@@ -71,18 +80,11 @@
                                 <table class="table table-hover align-middle mb-0" id="fee-collection-table">
                                     <thead class="table-light">
                                         <tr>
-                                            <th><input type="checkbox" id="selectAll"></th>
-                                            <th>Photo</th>
-                                            <th>Roll No</th>
-                                            <th>Adm No</th>
-                                            <th>Student Name</th>
-                                            <th>Father Name</th>
-                                            <th>Father Phone</th>
+                                            <th>Student</th>
+                                            <th>Guardian</th>
                                             <th>Class / Sec</th>
                                             <th>Fee Structure</th>
-                                            <th>Total Fee</th>
-                                            <th>Paid</th>
-                                            <th>Remaining Due</th>
+                                            <th class="text-end">Fee Summary</th>
                                             <th>Status</th>
                                             <th class="text-end">Actions</th>
                                         </tr>
@@ -90,21 +92,25 @@
                                     <tbody>
                                         @forelse($studentsData as $data)
                                             <tr>
-                                                <td><input type="checkbox" class="student-checkbox" value="{{$data['student']->id}}"></td>
                                                 <td>
-                                                    @if($data['student']->photo)
-                                                        <img src="{{asset('storage/'.$data['student']->photo)}}" class="rounded-circle" width="40" height="40" alt="photo">
-                                                    @else
-                                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width:40px; height:40px;">
-                                                            {{strtoupper(substr($data['student']->first_name, 0, 1))}}
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        @if($data['student']->photo)
+                                                            <img src="{{asset('storage/'.$data['student']->photo)}}" class="rounded-circle" width="36" height="36" alt="photo">
+                                                        @else
+                                                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:36px; height:36px;">
+                                                                {{strtoupper(substr($data['student']->first_name, 0, 1))}}
+                                                            </div>
+                                                        @endif
+                                                        <div>
+                                                            <div class="fw-bold">{{$data['student']->first_name}} {{$data['student']->last_name}}</div>
+                                                            <small class="text-muted">Roll {{$data['promotion']->id_card_number ?? 'N/A'}} &middot; Adm {{$data['academic_info']->board_reg_no ?? 'N/A'}}</small>
                                                         </div>
-                                                    @endif
+                                                    </div>
                                                 </td>
-                                                <td><span class="badge bg-light text-dark border">{{$data['promotion']->id_card_number ?? 'N/A'}}</span></td>
-                                                <td><span class="badge bg-light text-dark border">{{$data['academic_info']->board_reg_no ?? 'N/A'}}</span></td>
-                                                <td class="fw-bold">{{$data['student']->first_name}} {{$data['student']->last_name}}</td>
-                                                <td>{{$data['parent_info']->father_name ?? 'N/A'}}</td>
-                                                <td>{{$data['parent_info']->father_phone ?? 'N/A'}}</td>
+                                                <td>
+                                                    <div>{{$data['parent_info']->father_name ?? 'N/A'}}</div>
+                                                    <small class="text-muted">{{$data['parent_info']->father_phone ?? 'N/A'}}</small>
+                                                </td>
                                                 <td>{{$data['schoolClass']->class_name ?? ''}} - {{$data['section']->section_name ?? ''}}</td>
                                                 <td>
                                                     @if($data['fee_structure'])
@@ -113,9 +119,11 @@
                                                         <span class="badge bg-secondary">Default</span>
                                                     @endif
                                                 </td>
-                                                <td class="fw-bold">₹{{number_format($data['total_fee'], 2)}}</td>
-                                                <td class="text-success fw-bold">₹{{number_format($data['paid_amount'], 2)}}</td>
-                                                <td class="text-danger fw-bold">₹{{number_format($data['remaining_due'], 2)}}</td>
+                                                <td class="text-end">
+                                                    <div><small class="text-muted">Total</small> ₹{{number_format($data['total_fee'], 2)}}</div>
+                                                    <div><small class="text-muted">Paid</small> <span class="text-success">₹{{number_format($data['paid_amount'], 2)}}</span></div>
+                                                    <div class="fw-bold"><small class="text-muted fw-normal">Due</small> <span class="text-danger">₹{{number_format($data['remaining_due'], 2)}}</span></div>
+                                                </td>
                                                 <td>
                                                     @if($data['status'] == 'Paid')
                                                         <span class="badge bg-success">Paid</span>
@@ -128,32 +136,34 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
-                                                    @if($data['remaining_due'] > 0 || $data['total_fee'] == 0)
-                                                        <button class="btn btn-sm btn-success text-white me-1 btn-collect"
+                                                    <div class="d-flex flex-column gap-1 align-items-end">
+                                                        @if($data['remaining_due'] > 0 || $data['total_fee'] == 0)
+                                                            <button class="btn btn-sm btn-success text-white btn-collect"
+                                                                data-student-id="{{$data['student']->id}}"
+                                                                data-student-name="{{$data['student']->first_name}} {{$data['student']->last_name}}"
+                                                                data-class-id="{{$data['schoolClass']->id ?? 0}}"
+                                                                data-class-name="{{$data['schoolClass']->class_name ?? ''}}"
+                                                                data-section-name="{{$data['section']->section_name ?? ''}}"
+                                                                data-fee-structure-id="{{$data['fee_structure']->id ?? ''}}"
+                                                                data-fee-structure-name="{{$data['fee_structure']->name ?? 'Standard Fee'}}"
+                                                                data-total-fee="{{$data['total_fee']}}"
+                                                                data-paid-amount="{{$data['paid_amount']}}"
+                                                                data-remaining-due="{{$data['remaining_due']}}"
+                                                                data-installments='@json($data["fee_structure"] ? $data["fee_structure"]->installments : [])'>
+                                                                <i class="bi bi-cash"></i> Collect
+                                                            </button>
+                                                        @endif
+                                                        <button class="btn btn-sm btn-outline-info btn-history"
                                                             data-student-id="{{$data['student']->id}}"
-                                                            data-student-name="{{$data['student']->first_name}} {{$data['student']->last_name}}"
-                                                            data-class-id="{{$data['schoolClass']->id ?? 0}}"
-                                                            data-class-name="{{$data['schoolClass']->class_name ?? ''}}"
-                                                            data-section-name="{{$data['section']->section_name ?? ''}}"
-                                                            data-fee-structure-id="{{$data['fee_structure']->id ?? ''}}"
-                                                            data-fee-structure-name="{{$data['fee_structure']->name ?? 'Standard Fee'}}"
-                                                            data-total-fee="{{$data['total_fee']}}"
-                                                            data-paid-amount="{{$data['paid_amount']}}"
-                                                            data-remaining-due="{{$data['remaining_due']}}"
-                                                            data-installments='@json($data["fee_structure"] ? $data["fee_structure"]->installments : [])'>
-                                                            <i class="bi bi-cash"></i> Collect
+                                                            data-student-name="{{$data['student']->first_name}} {{$data['student']->last_name}}">
+                                                            <i class="bi bi-clock-history"></i> History
                                                         </button>
-                                                    @endif
-                                                    <button class="btn btn-sm btn-outline-info me-1 btn-history"
-                                                        data-student-id="{{$data['student']->id}}"
-                                                        data-student-name="{{$data['student']->first_name}} {{$data['student']->last_name}}">
-                                                        <i class="bi bi-clock-history"></i> History
-                                                    </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="15" class="text-center py-4 text-muted">No student records found for the selected filter.</td>
+                                                <td colspan="7" class="text-center py-4 text-muted">No student records found for the selected filter.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
@@ -403,14 +413,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-3">Error loading payment history.</td></tr>';
                 });
         });
-    });
-
-    // Select All Checkbox
-    document.getElementById('selectAll').addEventListener('change', function() {
-        var checkboxes = document.querySelectorAll('.student-checkbox');
-        for (var cb of checkboxes) {
-            cb.checked = this.checked;
-        }
     });
 });
 

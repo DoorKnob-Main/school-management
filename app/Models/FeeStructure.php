@@ -36,4 +36,9 @@ class FeeStructure extends Model
     {
         return $this->hasMany(StudentFee::class, 'fee_structure_id');
     }
+
+    public function components()
+    {
+        return $this->hasMany(FeeStructureComponent::class, 'fee_structure_id');
+    }
 }
