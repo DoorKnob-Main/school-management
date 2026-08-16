@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Promotion;
+use App\Observers\PromotionObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -24,5 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         \Illuminate\Pagination\Paginator::useBootstrap();
+
+        Promotion::observe(PromotionObserver::class);
     }
 }

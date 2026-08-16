@@ -8,7 +8,7 @@
   background-color: #f8f9fa;
 } */
 </style>
-<div class="container">
+<div class="container-fluid px-4">
     <div class="row justify-content-start">
         @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">

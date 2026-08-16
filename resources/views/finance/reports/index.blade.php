@@ -27,7 +27,6 @@
                             <a href="{{ route('finance.reports.pdf', request()->query()) }}" class="btn btn-primary">
                                 <i class="bi bi-file-earmark-pdf"></i> Download PDF
                             </a>
-                            <button onclick="window.print()" class="btn btn-outline-primary"><i class="bi bi-printer"></i> Print</button>
                             <button onclick="exportTableToCSV('financial-reports.csv')" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel"></i> CSV</button>
                         </div>
                     </div>

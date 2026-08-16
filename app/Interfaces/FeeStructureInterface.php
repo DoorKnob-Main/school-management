@@ -11,4 +11,5 @@ interface FeeStructureInterface
     public function update($id, $data);
     public function delete($id);
     public function assignToStudent($studentId, $sessionId, $classId, $feeStructureId);
+    public function assignApplicableStructuresToStudent($studentId, $sessionId, $classId);
 }

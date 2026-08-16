@@ -23,6 +23,9 @@ class FeeStructureStoreRequest extends FormRequest
             'installments.*.name' => 'required_with:installments|string|max:255',
             'installments.*.amount' => 'required_with:installments|numeric|min:0',
             'installments.*.due_date' => 'nullable|date',
+            'components' => 'nullable|array',
+            'components.*.fee_component_type_id' => 'required_with:components|exists:fee_component_types,id',
+            'components.*.amount' => 'required_with:components|numeric|min:0',
         ];
     }
 }

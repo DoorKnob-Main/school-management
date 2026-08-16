@@ -135,6 +135,42 @@ With the improved Docker setup, you will get:
     - Email: admin@ut.com
     - Password: password
 
+### Using On-Premise (Client / Production) Setup
+
+This is the supported deployment for real school clients — everything (app, database, biometric bridge) runs on one Windows PC at the school, on the school's own network. See `[[project_deployment_model_a]]` reasoning if you have access to project memory, or the short version below.
+
+**Prerequisites:** [XAMPP](https://www.apachefriends.org) installed (bundles PHP + MySQL), MySQL service started from the XAMPP Control Panel.
+
+**Steps:**
+1. Copy the pre-built project folder (already includes `vendor/` and compiled `public/js`/`public/css` — no Composer/Node needed on the client machine) anywhere on the PC.
+2. Double-click `run_project.bat`. It will:
+   - Point `.env` at MySQL (`doorknob_school` database, XAMPP defaults)
+   - Create the database if missing
+   - Run migrations (safe to re-run — only applies new ones)
+   - Seed default accounts on first run only (never wipes existing data on later runs)
+   - Start the server on `http://0.0.0.0:8000`, reachable from any computer on the school's network
+3. (Recommended) Run `install_service.bat` once to register the app as a background Windows service (via [NSSM](https://nssm.cc/download)) so it survives reboots without a terminal window open.
+4. Set up `backup.bat` in Windows Task Scheduler to run nightly — dumps the database and zips the `storage/app` folder into `storage/backups`.
+
+Default logins are the same as above (`admin@ut.com` / `superadmin@ut.com`, password `password`) — **change these immediately** on a real client install.
+
+### Running on Mac / Linux (development & testing)
+
+`run_project.sh` mirrors `run_project.bat` for Mac and Linux — same MySQL-only approach (no SQLite, no dev/prod divergence), same idempotent migrate/seed behavior, same LAN-reachable server. Client production installs remain Windows + XAMPP for now (see above); this script is for developing and testing on Mac/Linux, until a proper cross-platform installer exists.
+
+```sh
+chmod +x run_project.sh   # first time only
+./run_project.sh
+```
+
+It auto-detects your OS and:
+- Installs PHP 8.2 + Composer if missing (`brew` on Mac, `apt`/`dnf` on Linux) — note: a plain `brew install php` pulls the latest PHP, which is too new for this app's locked dependencies; the script specifically installs 8.2.
+- Installs/starts MySQL if missing (`brew install mysql` on Mac — no Gatekeeper issues like XAMPP; `apt`/`dnf` mysql-server on Linux)
+- Runs `composer install` / `npm install && npm run dev` only if `vendor/`/`node_modules/` are missing
+- Same `.env` fix-up, DB creation, migrate, first-run-only seed, and `0.0.0.0:8000` serve as the Windows script
+
+Override the MySQL root password if yours isn't blank: `DB_ROOT_PASSWORD=yourpass ./run_project.sh`
+
 ## Steps to follow:
 Please carefully follow the steps to setup the school.
 

@@ -58,12 +58,8 @@
 
                     <!-- Pending Students Table -->
                     <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-white py-3">
                             <h5 class="card-title mb-0 text-warning text-dark"><i class="bi bi-exclamation-circle"></i> Students with Pending Dues ({{count($pendingStudents)}} Found)</h5>
-                            <div>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSelectAll">Select All</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnDeselectAll">Deselect All</button>
-                            </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -71,13 +67,12 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th><input type="checkbox" id="selectAllCheckbox"></th>
-                                            <th>Student Name</th>
+                                            <th>Student</th>
                                             <th>Class & Sec</th>
-                                            <th>Father Name</th>
-                                            <th>Father Phone</th>
-                                            <th>Total Fee</th>
-                                            <th>Paid</th>
-                                            <th>Remaining Due</th>
+                                            <th>Guardian</th>
+                                            <th class="text-end">Total Fee</th>
+                                            <th class="text-end">Paid</th>
+                                            <th class="text-end">Remaining Due</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -86,15 +81,17 @@
                                                 <td><input type="checkbox" class="student-select-cb" value="{{$st['student']->id}}"></td>
                                                 <td class="fw-bold">{{$st['student']->first_name}} {{$st['student']->last_name}}</td>
                                                 <td>{{$st['school_class']->class_name ?? ''}} - {{$st['section']->section_name ?? ''}}</td>
-                                                <td>{{$st['father_name']}}</td>
-                                                <td><span class="badge bg-light text-dark border">{{$st['father_phone']}}</span></td>
-                                                <td>₹{{number_format($st['total_fee'], 2)}}</td>
-                                                <td class="text-success">₹{{number_format($st['paid_amount'], 2)}}</td>
-                                                <td class="text-danger fw-bold fs-6">₹{{number_format($st['due_amount'], 2)}}</td>
+                                                <td>
+                                                    <div>{{$st['father_name']}}</div>
+                                                    <small class="text-muted">{{$st['father_phone']}}</small>
+                                                </td>
+                                                <td class="text-end">₹{{number_format($st['total_fee'], 2)}}</td>
+                                                <td class="text-end text-success">₹{{number_format($st['paid_amount'], 2)}}</td>
+                                                <td class="text-end text-danger fw-bold">₹{{number_format($st['due_amount'], 2)}}</td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="8" class="text-center py-4 text-muted">No pending fee dues found for the selected filter.</td>
+                                                <td colspan="7" class="text-center py-4 text-muted">No pending fee dues found for the selected filter.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
@@ -241,18 +238,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updateSelection();
         });
     }
-
-    document.getElementById('btnSelectAll').addEventListener('click', function() {
-        cbs.forEach(function(cb) { cb.checked = true; });
-        if (selectAllCb) selectAllCb.checked = true;
-        updateSelection();
-    });
-
-    document.getElementById('btnDeselectAll').addEventListener('click', function() {
-        cbs.forEach(function(cb) { cb.checked = false; });
-        if (selectAllCb) selectAllCb.checked = false;
-        updateSelection();
-    });
 
     // Click placeholder chip to insert tag into template input
     document.querySelectorAll('.placeholder-tag').forEach(function(btn) {

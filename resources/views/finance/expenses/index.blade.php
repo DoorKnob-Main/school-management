@@ -41,8 +41,8 @@
                     <div class="card mb-4 shadow-sm">
                         <div class="card-body">
                             <form method="GET" action="{{route('finance.expenses.index')}}" class="row g-3 align-items-end">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Category</label>
+                                <div class="col-md-2 col-6">
+                                    <label class="form-label fw-bold small">Category</label>
                                     <select name="category" class="form-select" onchange="this.form.submit()">
                                         <option value="">All Categories</option>
                                         @foreach($categories as $cat)
@@ -50,8 +50,8 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Payment Mode</label>
+                                <div class="col-md-2 col-6">
+                                    <label class="form-label fw-bold small">Payment Mode</label>
                                     <select name="payment_mode" class="form-select" onchange="this.form.submit()">
                                         <option value="">All Modes</option>
                                         @foreach(['Cash','UPI','Cheque','Card','Bank Transfer','Online','Other'] as $m)
@@ -59,12 +59,20 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">Search</label>
+                                <div class="col-md-2 col-6">
+                                    <label class="form-label fw-bold small">From Date</label>
+                                    <input type="date" name="from_date" class="form-control" value="{{$filters['from_date'] ?? ''}}">
+                                </div>
+                                <div class="col-md-2 col-6">
+                                    <label class="form-label fw-bold small">To Date</label>
+                                    <input type="date" name="to_date" class="form-control" value="{{$filters['to_date'] ?? ''}}">
+                                </div>
+                                <div class="col-md-3 col-8">
+                                    <label class="form-label fw-bold small">Search</label>
                                     <input type="text" name="search" class="form-control" placeholder="Title, category, reference..." value="{{$filters['search'] ?? ''}}">
                                 </div>
-                                <div class="col-md-2 d-grid">
-                                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+                                <div class="col-md-1 col-4 d-grid">
+                                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
                                 </div>
                             </form>
                         </div>
@@ -101,11 +109,14 @@
                                                 <td class="text-end fw-bold text-danger">₹{{number_format($exp->amount, 2)}}</td>
                                                 <td><small>{{$exp->creator->first_name ?? 'Admin'}}</small></td>
                                                 <td class="text-end">
-                                                    <form method="POST" action="{{route('finance.expenses.destroy', $exp->id)}}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this expense record?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Delete</button>
-                                                    </form>
+                                                    <div class="d-flex justify-content-end gap-1">
+                                                        <a href="{{route('finance.expenses.voucher', $exp->id)}}" target="_blank" class="btn btn-sm btn-outline-primary" title="Voucher"><i class="bi bi-receipt"></i></a>
+                                                        <form method="POST" action="{{route('finance.expenses.destroy', $exp->id)}}" onsubmit="return confirm('Are you sure you want to delete this expense record?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                                                        </form>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @empty

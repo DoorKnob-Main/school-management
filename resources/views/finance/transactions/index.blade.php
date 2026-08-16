@@ -1,10 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        #main-content-col { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; }
+        .card { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
+    }
+</style>
 <div class="container-fluid px-4">
     <div class="row justify-content-start">
         @include('layouts.left-menu')
-        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
+        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10" id="main-content-col">
             <div class="row pt-2">
                 <div class="col ps-4">
                     @include('session-messages')
@@ -12,7 +19,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
                             <h1 class="display-6 mb-1"><i class="bi bi-journal-text"></i> Finance Ledger / Transactions</h1>
-                            <nav aria-label="breadcrumb">
+                            <nav aria-label="breadcrumb" class="no-print">
                                 <ol class="breadcrumb mb-0">
                                     <li class="breadcrumb-item"><a href="{{route('home')}}">Home</a></li>
                                     <li class="breadcrumb-item">Payment</li>
@@ -20,7 +27,7 @@
                                 </ol>
                             </nav>
                         </div>
-                        <div>
+                        <div class="no-print">
                             <button onclick="window.print()" class="btn btn-outline-primary me-2"><i class="bi bi-printer"></i> Print</button>
                             <button onclick="exportTableToCSV('transactions-ledger.csv')" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel"></i> Export CSV</button>
                         </div>
@@ -63,7 +70,7 @@
                     </div>
 
                     <!-- Filters Card -->
-                    <div class="card mb-4 shadow-sm">
+                    <div class="card mb-4 shadow-sm no-print">
                         <div class="card-body">
                             <form method="GET" action="{{route('finance.transactions.index')}}" id="filterForm">
                                 <div class="row g-3 mb-2">
@@ -139,6 +146,7 @@
                                             <th>Payment Mode</th>
                                             <th class="text-end">Amount</th>
                                             <th>Created By</th>
+                                            <th>Document</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -174,10 +182,19 @@
                                                     {{$trx->transaction_type == 'income' ? '+' : '-'}}₹{{number_format($trx->amount, 2)}}
                                                 </td>
                                                 <td><small>{{$trx->creator->first_name ?? 'Admin'}}</small></td>
+                                                <td>
+                                                    @if($trx->transaction_type == 'income' && $trx->fee_payment_id)
+                                                        <a href="{{route('finance.fee-collection.receipt', $trx->fee_payment_id)}}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i> Receipt</a>
+                                                    @elseif($trx->transaction_type == 'expense' && $trx->expense_id)
+                                                        <a href="{{route('finance.expenses.voucher', $trx->expense_id)}}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i> Voucher</a>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="8" class="text-center py-4 text-muted">No transactions found matching your criteria.</td>
+                                                <td colspan="9" class="text-center py-4 text-muted">No transactions found matching your criteria.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>

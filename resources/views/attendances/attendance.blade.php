@@ -3,7 +3,7 @@
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/fullcalendar5.9.0.min.css') }}">
 <script src="{{ asset('js/fullcalendar5.9.0.main.min.js') }}"></script>
-<div class="container">
+<div class="container-fluid px-4">
     <div class="row justify-content-start">
         @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">

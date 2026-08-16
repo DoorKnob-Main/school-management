@@ -32,7 +32,7 @@ class BiometricReportController extends Controller
     {
         $classes = SchoolClass::all();
         $sessions = SchoolSession::all();
-        $latestSession = SchoolSession::latest()->first();
+        $latestSession = SchoolSession::orderBy('id', 'desc')->first();
 
         return view('biometric.reports.index', compact('classes', 'sessions', 'latestSession'));
     }

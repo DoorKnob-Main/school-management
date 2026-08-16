@@ -98,6 +98,152 @@ class ReportController extends Controller
     }
 
     /**
+     * Display the due students list — printable, filterable by class,
+     * section, or individually selected students, with fee breakup.
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function dueStudents(Request $request)
+    {
+        $data = $this->prepareDueStudentsData($request);
+        return view('finance.reports.due-students', $data);
+    }
+
+    /**
+     * Download Due Students Report PDF via BrowserShot.
+     *
+     * @param Request $request
+     * @param ReportEngineService $reportEngine
+     * @return \Illuminate\Http\Response
+     */
+    public function dueStudentsPdf(Request $request, ReportEngineService $reportEngine)
+    {
+        $data = $this->prepareDueStudentsData($request);
+        $filename = 'due_students_' . date('Y-m-d_His') . '.pdf';
+
+        return $reportEngine->downloadPdf(
+            'reports.templates.due-students',
+            $data,
+            $filename
+        );
+    }
+
+    /**
+     * Preview Due Students Report using Base Layout in Browser.
+     *
+     * @param Request $request
+     * @param ReportEngineService $reportEngine
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function dueStudentsPreview(Request $request, ReportEngineService $reportEngine)
+    {
+        $data = $this->prepareDueStudentsData($request);
+        $data['pdfDownloadUrl'] = route('finance.reports.due-students.pdf', $request->query());
+
+        return $reportEngine->preview(
+            'reports.templates.due-students',
+            $data
+        );
+    }
+
+    /**
+     * Build the per-student due list for the selected class/section/students,
+     * including each student's fee breakup (components), for the printable
+     * due-students report. Filters: class_id, section_id, student_ids[].
+     *
+     * @param Request $request
+     * @return array
+     */
+    protected function prepareDueStudentsData(Request $request): array
+    {
+        $current_school_session_id = $this->getSchoolCurrentSession();
+        $session = SchoolSessionModel::find($current_school_session_id);
+        $sessionName = $session ? $session->session_name : (date('Y') . '-' . (date('Y') + 1) . ' Academic Session');
+
+        $classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
+
+        $classId = $request->get('class_id');
+        $sectionId = $request->get('section_id');
+        $studentIds = $request->get('student_ids', []);
+        if (is_string($studentIds)) {
+            $studentIds = explode(',', $studentIds);
+        }
+        $studentIds = array_map('intval', array_filter($studentIds));
+
+        $sections = $classId ? $this->sectionRepository->getAllByClassId($classId) : collect();
+
+        $promoQuery = Promotion::with(['student', 'schoolClass', 'section'])
+            ->where('session_id', $current_school_session_id);
+
+        if ($classId) {
+            $promoQuery->where('class_id', $classId);
+        }
+        if ($sectionId) {
+            $promoQuery->where('section_id', $sectionId);
+        }
+        if (!empty($studentIds)) {
+            $promoQuery->whereIn('student_id', $studentIds);
+        }
+
+        $promotions = $promoQuery->get();
+
+        $rows = [];
+        $totalDue = 0;
+        $onlyDue = $request->boolean('only_due', false);
+
+        foreach ($promotions as $promo) {
+            if (!$promo->student) {
+                continue;
+            }
+
+            $summary = $this->paymentRepository->getStudentFeeSummary($promo->student_id, $current_school_session_id);
+
+            if ($onlyDue && ($summary['remaining_due'] ?? 0) <= 0) {
+                continue;
+            }
+
+            $breakup = [];
+            if ($summary['fee_structure'] && $summary['fee_structure']->components) {
+                foreach ($summary['fee_structure']->components as $component) {
+                    $breakup[] = [
+                        'name' => $component->componentType->name ?? 'Component',
+                        'is_percentage' => $component->componentType && $component->componentType->isPercentage(),
+                        'amount' => $component->amount,
+                    ];
+                }
+            }
+
+            $totalDue += $summary['remaining_due'] ?? 0;
+
+            $rows[] = [
+                'student_id'    => $promo->student_id,
+                'student_name'  => trim(($promo->student->first_name ?? '') . ' ' . ($promo->student->last_name ?? '')),
+                'class_name'    => $promo->schoolClass->class_name ?? '',
+                'section_name'  => $promo->section->section_name ?? '',
+                'total_fee'     => $summary['total_fee'],
+                'paid_amount'   => $summary['paid_amount'],
+                'remaining_due' => $summary['remaining_due'],
+                'status'        => $summary['status'],
+                'breakup'       => $breakup,
+            ];
+        }
+
+        return [
+            'current_school_session_id' => $current_school_session_id,
+            'sessionName' => $sessionName,
+            'classes'     => $classes,
+            'sections'    => $sections,
+            'classId'     => $classId,
+            'sectionId'   => $sectionId,
+            'studentIds'  => $studentIds,
+            'onlyDue'     => $onlyDue,
+            'rows'        => $rows,
+            'totalDue'    => $totalDue,
+        ];
+    }
+
+    /**
      * Prepare consolidated financial reporting analytics and multi-class breakdowns.
      *
      * @param Request $request

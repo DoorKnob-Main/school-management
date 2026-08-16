@@ -153,7 +153,7 @@ class StudentLeaveController extends Controller
             'name' => 'required|string|max:100',
             'code' => 'nullable|string|max:20',
             'description' => 'nullable|string|max:255',
-            'is_active' => 'nullable|boolean',
+            'is_active' => 'nullable',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
@@ -175,7 +175,7 @@ class StudentLeaveController extends Controller
             'name' => 'required|string|max:100',
             'code' => 'nullable|string|max:20',
             'description' => 'nullable|string|max:255',
-            'is_active' => 'nullable|boolean',
+            'is_active' => 'nullable',
         ]);
 
         $validated['is_active'] = $request->has('is_active');

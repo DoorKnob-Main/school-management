@@ -81,4 +81,29 @@ class ExpenseController extends Controller
             return back()->withError($e->getMessage());
         }
     }
+
+    public function voucher($id)
+    {
+        $expense = $this->expenseRepository->findById($id);
+
+        return view('finance.expenses.voucher', [
+            'expense' => $expense,
+        ]);
+    }
+
+    public function voucherPdf($id, \App\Services\ReportEngineService $reportEngine)
+    {
+        $expense = $this->expenseRepository->findById($id);
+        $filename = 'expense_voucher_' . $id . '.pdf';
+
+        return $reportEngine->downloadPdf(
+            'finance.expenses.voucher',
+            ['expense' => $expense],
+            $filename,
+            [
+                'paper_size'  => 'A4',
+                'orientation' => 'portrait',
+            ]
+        );
+    }
 }
