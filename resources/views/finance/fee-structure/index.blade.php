@@ -41,39 +41,47 @@
                                     </div>
                                     <div class="card-body">
                                         <p class="mb-2"><strong>Class:</strong> {{$struct->schoolClass->class_name ?? 'All Classes (Default)'}}</p>
-                                        <p class="mb-3"><strong>Total Fee:</strong> <span class="fs-4 fw-bold text-success">₹{{number_format($struct->total_amount, 2)}}</span></p>
-                                        <p class="small text-muted mb-3">{{$struct->description ?? 'No description provided.'}}</p>
-
-                                        @if($struct->components->count())
-                                        <h6 class="fw-bold text-secondary border-bottom pb-1"><i class="bi bi-pie-chart"></i> Fee Breakup</h6>
-                                        <ul class="list-group list-group-flush mb-3">
-                                            @foreach($struct->components as $comp)
-                                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
-                                                    <span>{{ $comp->componentType->name ?? 'Component' }}</span>
-                                                    <span class="badge bg-light text-dark border fs-6">
-                                                        {{ $comp->componentType && $comp->componentType->isPercentage() ? number_format($comp->amount, 2).'%' : '₹'.number_format($comp->amount, 2) }}
-                                                    </span>
-                                                </li>
-                                            @endforeach
-                                        </ul>
+                                        <p class="mb-2"><strong>Total Fee:</strong> <span class="fs-4 fw-bold text-success">₹{{number_format($struct->total_amount, 2)}}</span></p>
+                                        @if($struct->description)
+                                        <p class="small text-muted mb-2">{{$struct->description}}</p>
                                         @endif
 
-                                        <h6 class="fw-bold text-secondary border-bottom pb-1"><i class="bi bi-list-nested"></i> Installments Breakdown</h6>
-                                        <ul class="list-group list-group-flush mb-0">
-                                            @forelse($struct->installments as $inst)
-                                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
-                                                    <div>
-                                                        <span class="fw-bold">{{$inst->name}}</span>
-                                                        @if($inst->due_date)
-                                                            <small class="d-block text-muted">Due: {{$inst->due_date}}</small>
-                                                        @endif
-                                                    </div>
-                                                    <span class="badge bg-light text-dark border fs-6">₹{{number_format($inst->amount, 2)}}</span>
-                                                </li>
-                                            @empty
-                                                <li class="list-group-item px-0 text-muted small">Lump sum payment (No installments).</li>
-                                            @endforelse
-                                        </ul>
+                                        <button class="btn btn-sm btn-outline-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#details{{$struct->id}}">
+                                            <i class="bi bi-list-ul"></i> {{$struct->components->count()}} component(s), {{$struct->installments->count() ?: 'no'}} installment(s)
+                                        </button>
+
+                                        <div class="collapse mt-2" id="details{{$struct->id}}">
+                                            @if($struct->components->count())
+                                            <h6 class="fw-bold text-secondary border-bottom pb-1 mt-2"><i class="bi bi-pie-chart"></i> Fee Breakup</h6>
+                                            <ul class="list-group list-group-flush mb-3">
+                                                @foreach($struct->components as $comp)
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                                        <span>{{ $comp->componentType->name ?? 'Component' }}</span>
+                                                        <span class="badge bg-light text-dark border fs-6">
+                                                            {{ $comp->componentType && $comp->componentType->isPercentage() ? number_format($comp->amount, 2).'%' : '₹'.number_format($comp->amount, 2) }}
+                                                        </span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                            @endif
+
+                                            <h6 class="fw-bold text-secondary border-bottom pb-1"><i class="bi bi-list-nested"></i> Installments Schedule</h6>
+                                            <ul class="list-group list-group-flush mb-0">
+                                                @forelse($struct->installments as $inst)
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                                        <div>
+                                                            <span class="fw-bold">{{$inst->name}}</span>
+                                                            @if($inst->due_date)
+                                                                <small class="d-block text-muted">Due: {{$inst->due_date}}</small>
+                                                            @endif
+                                                        </div>
+                                                        <span class="badge bg-light text-dark border fs-6">₹{{number_format($inst->amount, 2)}}</span>
+                                                    </li>
+                                                @empty
+                                                    <li class="list-group-item px-0 text-muted small">Lump sum payment (No installments).</li>
+                                                @endforelse
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -29,7 +29,7 @@ class BiometricAttendanceProcessor
     {
         $dateObj = Carbon::parse($date);
         $academicSetting = AcademicSetting::latest()->first();
-        $currentSession = SchoolSession::latest()->first();
+        $currentSession = SchoolSession::orderBy('id', 'desc')->first();
         $sessionId = $currentSession ? $currentSession->id : 1;
 
         $timing = $this->getSchoolTimingSettings();

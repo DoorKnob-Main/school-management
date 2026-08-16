@@ -107,7 +107,7 @@
                     <!-- Left Side Of Navbar -->
                     @auth
                         @php
-                            $latest_school_session = \App\Models\SchoolSession::latest()->first();
+                            $latest_school_session = \App\Models\SchoolSession::orderBy('id', 'desc')->first();
                             $current_school_session_name = null;
                             if($latest_school_session){
                                 $current_school_session_name = $latest_school_session->session_name;
@@ -117,7 +117,7 @@
                         <li class="nav-item">
                             @if (session()->has('browse_session_name') && session('browse_session_name') !== $current_school_session_name)
                                 <a class="nav-link text-danger disabled" href="#" tabindex="-1" aria-disabled="true"><i class="bi bi-exclamation-diamond-fill me-2"></i> Browsing as Academic Session {{session('browse_session_name')}}</a>
-                            @elseif(\App\Models\SchoolSession::latest()->count() > 0)
+                            @elseif(\App\Models\SchoolSession::orderBy('id', 'desc')->count() > 0)
                                 <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Current Academic Session {{$current_school_session_name}}</a>
                             @else
                                 <a class="nav-link text-danger disabled" href="#" tabindex="-1" aria-disabled="true"><i class="bi bi-exclamation-diamond-fill me-2"></i> Create an Academic Session.</a>

@@ -1,5 +1,5 @@
 @auth
-<div class="col-xs-1 col-sm-1 col-md-1 col-lg-2 col-xl-2 col-xxl-2 border-rt-e6 px-0">
+<div class="col-xs-1 col-sm-1 col-md-1 col-lg-2 col-xl-2 col-xxl-2 border-rt-e6 px-0 no-print">
     <div class="d-flex flex-column align-items-center align-items-sm-start">
         <ul class="nav flex-column pt-2 w-100">
             <li class="nav-item">
@@ -11,7 +11,7 @@
                     if (session()->has('browse_session_id')){
                         $classCount = \App\Models\SchoolClass::where('session_id', session('browse_session_id'))->count();
                     } else {
-                        $latest_session = \App\Models\SchoolSession::latest()->first();
+                        $latest_session = \App\Models\SchoolSession::orderBy('id', 'desc')->first();
                         $classCount = $latest_session ? \App\Models\SchoolClass::where('session_id', $latest_session->id)->count() : 0;
                     }
                 @endphp
@@ -109,7 +109,7 @@
                     if (session()->has('browse_session_id')){
                         $class_info = \App\Models\Promotion::where('session_id', session('browse_session_id'))->where('student_id', Auth::user()->id)->first();
                     } else {
-                        $latest_session = \App\Models\SchoolSession::latest()->first();
+                        $latest_session = \App\Models\SchoolSession::orderBy('id', 'desc')->first();
                         $class_info = $latest_session ? \App\Models\Promotion::where('session_id', $latest_session->id)->where('student_id', Auth::user()->id)->first() : null;
                     }
                 @endphp
@@ -189,15 +189,6 @@
                     <li class="nav-item w-100" {{ request()->routeIs('finance.fee-reminder.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('finance.fee-reminder.index')}}"><i class="bi bi-bell me-2"></i> Fee Reminder</a></li>
                     @endcan
                 </ul>
-            </li>
-            @endif
-
-            @if (Auth::user()->isAdminOrSuperAdmin())
-            <li class="nav-item">
-                <a class="nav-link disabled" href="#" aria-disabled="true"><i class="bi bi-person-lines-fill"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Staff</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link disabled" href="#" aria-disabled="true"><i class="bi bi-journals"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Library</span></a>
             </li>
             @endif
 

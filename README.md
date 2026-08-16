@@ -154,6 +154,23 @@ This is the supported deployment for real school clients — everything (app, da
 
 Default logins are the same as above (`admin@ut.com` / `superadmin@ut.com`, password `password`) — **change these immediately** on a real client install.
 
+### Running on Mac / Linux (development & testing)
+
+`run_project.sh` mirrors `run_project.bat` for Mac and Linux — same MySQL-only approach (no SQLite, no dev/prod divergence), same idempotent migrate/seed behavior, same LAN-reachable server. Client production installs remain Windows + XAMPP for now (see above); this script is for developing and testing on Mac/Linux, until a proper cross-platform installer exists.
+
+```sh
+chmod +x run_project.sh   # first time only
+./run_project.sh
+```
+
+It auto-detects your OS and:
+- Installs PHP 8.2 + Composer if missing (`brew` on Mac, `apt`/`dnf` on Linux) — note: a plain `brew install php` pulls the latest PHP, which is too new for this app's locked dependencies; the script specifically installs 8.2.
+- Installs/starts MySQL if missing (`brew install mysql` on Mac — no Gatekeeper issues like XAMPP; `apt`/`dnf` mysql-server on Linux)
+- Runs `composer install` / `npm install && npm run dev` only if `vendor/`/`node_modules/` are missing
+- Same `.env` fix-up, DB creation, migrate, first-run-only seed, and `0.0.0.0:8000` serve as the Windows script
+
+Override the MySQL root password if yours isn't blank: `DB_ROOT_PASSWORD=yourpass ./run_project.sh`
+
 ## Steps to follow:
 Please carefully follow the steps to setup the school.
 
