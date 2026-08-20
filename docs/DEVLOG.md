@@ -4,6 +4,26 @@ Chronological record of significant decisions and changes. Newer entries on top.
 
 ---
 
+## 2026-08-20 — Manual attendance revamp (data bug + UX + date-aware upsert)
+
+Reworked the manual attendance module end to end. Biometric attendance code and views were explicitly left untouched — the two subsystems share the `attendances` table, so the manual side was aligned *to* biometric's conventions rather than the reverse.
+
+**1. Fixed the class/section duplication on the launcher.** `attendances/index` (section mode) looped `classes_and_sections['school_sections']` — the *flat* list of every section in the session — inside every class card, so all 18 sections rendered under each of the 9 classes (162 items, every section duplicated everywhere). Now the controller loads each class's own `sections()` relation (`$classes->load('sections')`) and the blade iterates `$school_class->sections`, so a class shows only its real sections. Teacher-role filtering also narrowed from class-only to assigned class **and** section **and** course.
+
+**2. Aligned manual status to the biometric vocabulary.** Manual attendance and biometric write to the *same* `attendances.status` column. Biometric uses `on` (present), `off` (absent), `late`, `on_leave`, `holiday`, `pending` (it maps present→`on`/absent→`off` in `BiometricAttendanceProcessor`, rest as-is). Manual historically also used `on`/`off`, but the old `view.blade` only recognized `'on'` as present and "Total Attended" counted *every* row regardless of status. Rather than invent a second vocabulary, manual now writes exactly what biometric writes — `on`/`off`/`late`/`on_leave` (`AttendanceRepository::MANUAL_STATUSES`); the UI shows Present/Absent/Late/Leave but stores the biometric string. Views count only present-like (`on`/`present`/`late`) as attended and still accept `present`/`absent` defensively. **One shared vocabulary, so no data migration and no normalization is needed** — biometric code and data are untouched, and there is no read-time translation between the two writers.
+
+**3. Date-aware taking (back-dating + history).** Was hardcoded to today (`whereDate created_at = today`). Repository read methods (`getSectionAttendance`/`getCourseAttendance`) and `saveAttendance` now take an optional date (default today, never the future — clamped by `AttendanceController::resolveDate()`). Each Take/View page has a date picker; back-dated rows are stamped at the chosen date. Interface signatures updated with `$date = null` defaults.
+
+**4. Upsert instead of insert.** `saveAttendance` was `Attendance::insert()` with no unique key — a double submit or a manual take after biometric created duplicate rows, and the once-per-day guard was UI-only (`attendance_count < 1` hid the button, but `store()` never re-checked). Now it upserts one row per (student, scope, date): update if present, else create. Manual rows are tagged `attendance_source = 'manual'`. The one-shot lock is gone — teachers can re-take/edit; an info banner shows when editing an existing day.
+
+**5. Professional roster UI.** Rebuilt all three blades (`index`/`take`/`view`) on Bootstrap 5 cards: launcher with scoped class cards + global date picker; Take page with a 4-state radio button-group per student (Present/Absent/Late/Leave), live search, All-Present/All-Absent bulk actions, and live status counters; View page with summary stat cards (Total/Present/Late/On-Leave/Absent) + a clean table showing status badge, source, and session days-attended. Also allowed all-absent saves (`status` validation relaxed from `required` to `nullable|array` with a per-value `in:` whitelist).
+
+**Verified in-browser** (Super Admin, local Mac dev): launcher shows 9 classes × their own 2 sections with zero duplicates; edited a section's roster (one Present→stayed, one set to Late), saved → "save successful", counters correct, row count unchanged (no duplicate); View page summary + badges + days-attended all correct.
+
+**Files:** `AttendanceController`, `AttendanceRepository`, `AttendanceInterface`, `AttendanceStoreRequest`, `resources/views/attendances/{index,take,view}.blade.php`. No migration (manual reuses the existing biometric vocabulary). Biometric processor/services/views not touched.
+
+---
+
 ## 2026-08-16 (end of day) — End-to-end verification pass before push
 
 Ran a full browser-driven pass through the payment flow and a sample of unrelated pages before pushing `payment-flow`, using a local Mac dev setup (Homebrew PHP 8.2 + Composer + SQLite — see "Local Mac test setup" below). Found and fixed three real bugs uncovered by testing, none of them UI issues:

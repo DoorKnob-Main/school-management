@@ -27,9 +27,11 @@ class AttendanceStoreRequest extends FormRequest
             'course_id'             => 'integer',
             'class_id'              => 'integer',
             'section_id'            => 'integer',
+            'attendance_date'       => 'nullable|date|before_or_equal:today',
             'student_ids'           => 'required|array|min:1',
             'student_ids.*'         => 'integer',
-            'status'                => 'required|array|min:1',
+            'status'                => 'nullable|array',
+            'status.*'              => 'in:on,off,late,on_leave',
             'session_id'            => 'required',
         ];
     }

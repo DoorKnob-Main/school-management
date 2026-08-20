@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Interfaces\UserInterface;
 use App\Interfaces\SchoolClassInterface;
@@ -52,29 +53,37 @@ class AttendanceController extends Controller
 
         $current_school_session_id = $this->getSchoolCurrentSession();
 
-        $classes_and_sections = $this->schoolClassRepository->getClassesAndSections($current_school_session_id);
-        $courseRepository = new CourseRepository();
-        $courses = $courseRepository->getAll($current_school_session_id);
+        // Each class carries its OWN sections/courses (scoped via relations) so
+        // the launcher shows the real hierarchy instead of every section under
+        // every class.
+        $classes = $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id);
+        $classes->load('sections');
 
         if (auth()->user()->effective_role == 'teacher') {
             $assignedTeacherRepository = new AssignedTeacherRepository();
             $assignedTeacherCourses = $assignedTeacherRepository->getTeacherCourses($current_school_session_id, auth()->user()->id, 0);
-            $assignedClassIds = $assignedTeacherCourses->pluck('class_id')->unique()->toArray();
-            $assignedCourseIds = $assignedTeacherCourses->pluck('course_id')->unique()->toArray();
+            $assignedClassIds   = $assignedTeacherCourses->pluck('class_id')->unique()->toArray();
+            $assignedSectionIds = $assignedTeacherCourses->pluck('section_id')->unique()->toArray();
+            $assignedCourseIds  = $assignedTeacherCourses->pluck('course_id')->unique()->toArray();
 
-            $classes_and_sections['school_classes'] = $classes_and_sections['school_classes']->filter(function($c) use ($assignedClassIds) {
+            $classes = $classes->filter(function ($c) use ($assignedClassIds) {
                 return in_array($c->id, $assignedClassIds);
-            });
+            })->values();
 
-            $courses = $courses->filter(function($crs) use ($assignedCourseIds) {
-                return in_array($crs->id, $assignedCourseIds);
-            });
+            foreach ($classes as $c) {
+                $c->setRelation('sections', $c->sections->filter(function ($s) use ($assignedSectionIds) {
+                    return in_array($s->id, $assignedSectionIds);
+                })->values());
+                $c->setRelation('courses', $c->courses->filter(function ($crs) use ($assignedCourseIds) {
+                    return in_array($crs->id, $assignedCourseIds);
+                })->values());
+            }
         }
 
         $data = [
-            'academic_setting'      => $academic_setting,
-            'classes_and_sections'  => $classes_and_sections,
-            'courses'               => $courses,
+            'academic_setting' => $academic_setting,
+            'classes'          => $classes,
+            'today'            => Carbon::today()->toDateString(),
         ];
 
         return view('attendances.index', $data);
@@ -99,20 +108,27 @@ class AttendanceController extends Controller
 
             $class_id = $request->query('class_id');
             $section_id = $request->query('section_id', 0);
-            $course_id = $request->query('course_id');
+            $course_id = $request->query('course_id', 0);
+
+            // Selected date (default today, never the future).
+            $attendance_date = $this->resolveDate($request->query('date'));
 
             $student_list = $this->userRepository->getAllStudents($current_school_session_id, $class_id, $section_id);
 
             $school_class = $this->schoolClassRepository->findById($class_id);
-            $school_section = $this->sectionRepository->findById($section_id);
+            $school_section = $section_id ? $this->sectionRepository->findById($section_id) : null;
 
             $attendanceRepository = new AttendanceRepository();
 
             if($academic_setting->attendance_type == 'section') {
-                $attendance_count = $attendanceRepository->getSectionAttendance($class_id, $section_id, $current_school_session_id)->count();
+                $existing = $attendanceRepository->getSectionAttendance($class_id, $section_id, $current_school_session_id, $attendance_date);
             } else {
-                $attendance_count = $attendanceRepository->getCourseAttendance($class_id, $course_id, $current_school_session_id)->count();
+                $existing = $attendanceRepository->getCourseAttendance($class_id, $course_id, $current_school_session_id, $attendance_date);
             }
+
+            // Map student_id => status for the selected date, so the form
+            // pre-selects current marks and stays editable.
+            $existing_attendance = $existing->pluck('status', 'student_id')->toArray();
 
             $data = [
                 'current_school_session_id' => $current_school_session_id,
@@ -120,7 +136,12 @@ class AttendanceController extends Controller
                 'student_list'      => $student_list,
                 'school_class'      => $school_class,
                 'school_section'    => $school_section,
-                'attendance_count'  => $attendance_count,
+                'course_id'         => $course_id,
+                'section_id'        => $section_id,
+                'attendance_date'   => $attendance_date,
+                'attendance_count'  => $existing->count(),
+                'existing_attendance' => $existing_attendance,
+                'statuses'          => AttendanceRepository::MANUAL_STATUSES,
             ];
 
             return view('attendances.take', $data);
@@ -129,6 +150,23 @@ class AttendanceController extends Controller
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
         }
+    }
+
+    /**
+     * Normalize an incoming date string to Y-m-d, defaulting to today and
+     * never allowing a future date.
+     */
+    private function resolveDate($date)
+    {
+        try {
+            $parsed = $date ? Carbon::parse($date) : Carbon::today();
+        } catch (\Exception $e) {
+            $parsed = Carbon::today();
+        }
+        if ($parsed->gt(Carbon::today())) {
+            $parsed = Carbon::today();
+        }
+        return $parsed->toDateString();
     }
 
     /**
@@ -173,20 +211,43 @@ class AttendanceController extends Controller
         $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
 
         $class_id = $request->query('class_id');
-        $section_id = $request->query('section_id');
-        $course_id = $request->query('course_id');
+        $section_id = $request->query('section_id', 0);
+        $course_id = $request->query('course_id', 0);
+        $attendance_date = $this->resolveDate($request->query('date'));
 
         $attendanceRepository = new AttendanceRepository();
 
         try {
             $academic_setting = $this->academicSettingRepository->getAcademicSetting();
             if($academic_setting->attendance_type == 'section') {
-                $attendances = $attendanceRepository->getSectionAttendance($class_id, $section_id, $current_school_session_id);
+                $attendances = $attendanceRepository->getSectionAttendance($class_id, $section_id, $current_school_session_id, $attendance_date);
             } else {
-                $attendances = $attendanceRepository->getCourseAttendance($class_id, $course_id, $current_school_session_id);
+                $attendances = $attendanceRepository->getCourseAttendance($class_id, $course_id, $current_school_session_id, $attendance_date);
             }
-            $data = ['attendances' => $attendances];
-            
+
+            // Live summary of the selected day.
+            $presentLike = ['present', 'on', 'late'];
+            $summary = [
+                'total'    => $attendances->count(),
+                'present'  => $attendances->whereIn('status', ['present', 'on'])->count(),
+                'late'     => $attendances->where('status', 'late')->count(),
+                'on_leave' => $attendances->where('status', 'on_leave')->count(),
+                'absent'   => $attendances->filter(function ($a) use ($presentLike) {
+                    return !in_array($a->status, array_merge($presentLike, ['on_leave']));
+                })->count(),
+            ];
+
+            $data = [
+                'attendances'     => $attendances,
+                'attendance_date' => $attendance_date,
+                'summary'         => $summary,
+                'school_class'    => $this->schoolClassRepository->findById($class_id),
+                'school_section'  => $section_id ? $this->sectionRepository->findById($section_id) : null,
+                'class_id'        => $class_id,
+                'section_id'      => $section_id,
+                'course_id'       => $course_id,
+            ];
+
             return view('attendances.view', $data);
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());

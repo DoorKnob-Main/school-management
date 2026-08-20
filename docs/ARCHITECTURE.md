@@ -18,7 +18,7 @@
 | Auth | `Auth/*Controller` | Standard Laravel scaffolding |
 | School setup | `SchoolSessionController`, `SemesterController`, `SchoolClassController`, `SectionController`, `CourseController` | Academic year → semester → class → section → course hierarchy |
 | Staff/Students | `UserController`, `AssignedTeacherController`, `StudentAcademicInfoController`, `StudentParentInfoController` | CRUD + profile data, teacher-course assignment |
-| Attendance (manual) | `AttendanceController` | Daily class attendance taken by a teacher |
+| Attendance (manual) | `AttendanceController` | Daily class attendance taken by a teacher — date-aware (any day, default today), 4 statuses (`on`/`off`/`late`/`on_leave` — same strings biometric writes), upsert per student/day (no duplicates). See §4.5 |
 | Exams/Marks | `MarkController`, `ExamController`, `ExamRuleController`, `GradingSystemController`, `GradeRuleController` | Marks entry, grading rule config |
 | Promotion | `PromotionController` | Move students between classes/sessions |
 | Calendar/Notices/Routine | `EventController`, `NoticeController`, `RoutineController`, `SyllabusController`, `AssignmentController` | Scheduling and communication |
@@ -68,6 +68,11 @@ LeaveType → StudentLeave (student_id, dates, status, approved_by)
 Attendance table extended with: in_time, out_time, attendance_source,
   late_minutes, early_leave_minutes, is_corrected, corrected_by, correction_reason, remarks
 ```
+**Status vocabulary (one shared set):** manual and biometric attendance write to the *same* `attendances.status` column and use the *same* strings:
+- **Biometric** (`BiometricAttendanceProcessor`) writes `on` (present), `off` (absent), `late`, `on_leave`, `holiday`, `pending`. It maps present→`on` and absent→`off`; the rest are stored as-is. `attendance_source = 'biometric'`.
+- **Manual** (`AttendanceRepository::saveAttendance`) writes the same core set — `on`/`off`/`late`/`on_leave` (`AttendanceRepository::MANUAL_STATUSES`). `attendance_source = 'manual'`. UI labels these Present/Absent/Late/Leave but the stored value is the biometric string.
+
+Only difference is `attendance_source`. Readers still defensively accept `present`/`absent` too (`status === 'on' || 'present'`) for safety against any old data, but nothing in the app writes those now. "Days attended" counts present-like only (`on`/`present`/`late`).
 
 **Repository pattern:** older modules (users, academic, finance) use `app/Repositories/*Repository.php` + `app/Interfaces/*Interface.php`, bound in per-domain service providers (`FinanceServiceProvider`, `UserServiceProvider`, etc). Biometric and Leave modules are newer and go straight through Eloquent — no repository layer for them yet. Worth knowing if extending the codebase: don't assume every domain follows the repository pattern.
 
@@ -103,6 +108,19 @@ This is the main custom subsystem added on top of Unifiedtransform.
 ### 4.4 Leave ↔ Attendance integration
 
 `app/Services/LeaveService.php::approveLeave()` doesn't just flip a status — it calls `BiometricAttendanceProcessor::processDate()` for every date in the approved leave range, so attendance is recalculated to reflect the leave instead of showing a false absence. This is the one place the two new features are directly coupled.
+
+### 4.5 Manual attendance — how it works
+
+Teacher/admin-driven daily attendance, independent of the biometric pipeline but writing to the same `attendances` table (§3).
+
+- **Launcher** (`attendances/index`) — class cards, each showing its **own** sections (section mode) or courses (course mode) via the class's `sections()`/`courses()` relations. A global date picker rewrites the Take/View links. (Historic bug: the blade looped the flat all-sections list under every class, duplicating every section everywhere — fixed to use per-class relations.)
+- **Take** (`attendances/take`) — roster with a 4-state radio group per student (Present/Absent/Late/Leave), live search, All-Present/All-Absent bulk actions, and live counters. Pre-loads any existing marks for the selected date and stays editable.
+- **Save** (`AttendanceRepository::saveAttendance`) — **upserts** one row per (student, class, section/course, date): updates if a row exists for that date, else creates one stamped at the chosen date. This is what prevents duplicates and enables editing/back-dating. Tags `attendance_source = 'manual'`.
+- **View** (`attendances/view`) — summary stat cards + per-student status badges, source, and session days-attended, for the selected date.
+- **Date handling** — `AttendanceController::resolveDate()` defaults to today and clamps out future dates; the read methods (`getSectionAttendance`/`getCourseAttendance`) and `saveAttendance` all take an optional date.
+- **Guards** — session read-only check (only the latest session is editable unless admin/super-admin) and `AssignedTeacherCheck` (a teacher may only touch their assigned class/section/course).
+
+Course-mode roster still relies on `UserRepository::getAllStudents` which needs a section; course-mode attendance is the secondary path (the live setting is section mode) and was left as-is.
 
 ## 5. Deployment model
 

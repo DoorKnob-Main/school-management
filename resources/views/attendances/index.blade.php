@@ -7,74 +7,117 @@
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
             <div class="row pt-2">
                 <div class="col ps-4">
-                    <h1 class="display-6 mb-3"><i class="bi bi-calendar2-week"></i> Attendance</h1>
-                    <div class="row">
-                        <div class="col">
-                            <div class="row">
-                                @foreach ($classes_and_sections['school_classes'] as $school_class)
-                                <div class="col-12">
-                                    <div class="card my-3">
-                                        <div class="card-header bg-transparent">
-                                            <i class="bi bi-diagram-2"></i> {{$school_class->class_name}}
-                                        </div>
-                                        <div class="card-body text-dark">
-                                            @if ($academic_setting->attendance_type == 'course')
-                                                @foreach ($courses as $course)
-                                                    @if ($course->class_id == $school_class->id)
-                                                    <h6>
-                                                        Course: {{$course->course_name}}
-                                                    </h6>
-                                                    <div class="list-group mb-2">
-                                                        <a href="{{url('attendances/view?class_id='.$school_class->id.'&class_name='.$school_class->class_name.'&course_id='.$course->id.'&course_name='.$course->course_name)}}" class="list-group-item list-group-item-action  d-flex justify-content-between align-items-center">
-                                                            View Attendance
-                                                            {{-- <span class="badge bg-success rounded-pill">PRESENT TODAY 38</span> --}}
-                                                        </a>
-                                                        <a href="{{url('attendances/take?class_id='.$school_class->id.'&class_name='.$school_class->class_name.'&course_id='.$course->id.'&course_name='.$course->course_name)}}" class="list-group-item list-group-item-action">
-                                                            Take Attendance
-                                                        </a>
-                                                    </div>   
-                                                    @endif
-                                                @endforeach
-                                            @else
-                                            <div class="tab-content">
-                                                <div class="accordion" id="accordionClass{{$school_class->id}}">
-                                                    @foreach ($classes_and_sections['school_sections'] as $school_section)
-                                                        <div class="accordion-item">
-                                                            <h2 class="accordion-header" id="headingClass{{$school_class->id}}Section{{$school_section->id}}">
-                                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseClass{{$school_class->id}}Section{{$school_section->id}}" aria-expanded="false" aria-controls="collapseClass{{$school_class->id}}Section{{$school_section->id}}">
-                                                                    {{$school_section->section_name}}
-                                                                </button>
-                                                            </h2>
-                                                            <div id="collapseClass{{$school_class->id}}Section{{$school_section->id}}" class="accordion-collapse collapse" aria-labelledby="headingClass{{$school_class->id}}Section{{$school_section->id}}" data-bs-parent="#accordionClass{{$school_class->id}}">
-                                                                <div class="accordion-body">
-                                                                    <div class="list-group mb-2">
-                                                                        <a href="{{url('attendances/view?class_id='.$school_class->id.'&section_id='.$school_section->id.'&class_name='.$school_class->class_name.'&section_name='.$school_section->section_name)}}" class="list-group-item list-group-item-action  d-flex justify-content-between align-items-center">
-                                                                            View Attendance
-                                                                            {{-- <span class="badge bg-success rounded-pill">PRESENT TODAY 38</span> --}}
-                                                                        </a>
-                                                                        <a href="{{url('attendances/take?class_id='.$school_class->id.'&class_name='.$school_class->class_name.'&section_id='.$school_section->id.'&section_name='.$school_section->section_name)}}" class="list-group-item list-group-item-action">
-                                                                            Take Attendance
-                                                                        </a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                            @endif
-                                        </div>
-                                        {{-- <div class="card-footer bg-transparent">Total Students: 120</div> --}}
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-1">
+                        <h1 class="display-6 mb-0">
+                            <i class="bi bi-calendar2-check"></i> Manual Attendance
+                        </h1>
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="attDate" class="text-muted small mb-0">Date</label>
+                            <input type="date" id="attDate" class="form-control form-control-sm" style="max-width: 180px;"
+                                   value="{{ request('date', $today) }}" max="{{ $today }}">
                         </div>
                     </div>
+                    <p class="text-muted">
+                        Pick a class and
+                        {{ $academic_setting->attendance_type == 'course' ? 'course' : 'section' }}
+                        to take or view attendance for the selected date.
+                    </p>
+
+                    @include('session-messages')
+
+                    @forelse ($classes as $school_class)
+                        <div class="card shadow-sm border-0 mb-3">
+                            <div class="card-header bg-white d-flex align-items-center border-bottom">
+                                <span class="badge rounded-pill bg-primary-subtle text-primary me-2">
+                                    <i class="bi bi-mortarboard"></i>
+                                </span>
+                                <h5 class="mb-0 fw-semibold">{{ $school_class->class_name }}</h5>
+                            </div>
+                            <div class="card-body">
+                                @if ($academic_setting->attendance_type == 'course')
+                                    @php $items = $school_class->courses; @endphp
+                                    @if ($items->isEmpty())
+                                        <div class="text-muted small fst-italic">No courses in this class.</div>
+                                    @else
+                                        <div class="row g-2">
+                                            @foreach ($items as $course)
+                                                <div class="col-12 col-md-6 col-xl-4">
+                                                    <div class="border rounded p-2 d-flex justify-content-between align-items-center h-100">
+                                                        <span class="fw-medium text-truncate me-2">
+                                                            <i class="bi bi-journal-text text-secondary me-1"></i>{{ $course->course_name }}
+                                                        </span>
+                                                        <span class="btn-group btn-group-sm flex-shrink-0">
+                                                            <a class="btn btn-primary att-link"
+                                                               data-href="{{ url('attendances/take?class_id='.$school_class->id.'&class_name='.urlencode($school_class->class_name).'&course_id='.$course->id.'&course_name='.urlencode($course->course_name)) }}">
+                                                                <i class="bi bi-pencil-square"></i> Take
+                                                            </a>
+                                                            <a class="btn btn-outline-secondary att-link"
+                                                               data-href="{{ url('attendances/view?class_id='.$school_class->id.'&class_name='.urlencode($school_class->class_name).'&course_id='.$course->id.'&course_name='.urlencode($course->course_name)) }}">
+                                                                <i class="bi bi-eye"></i> View
+                                                            </a>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                @else
+                                    @php $items = $school_class->sections; @endphp
+                                    @if ($items->isEmpty())
+                                        <div class="text-muted small fst-italic">No sections in this class.</div>
+                                    @else
+                                        <div class="row g-2">
+                                            @foreach ($items as $section)
+                                                <div class="col-12 col-md-6 col-xl-4">
+                                                    <div class="border rounded p-2 d-flex justify-content-between align-items-center h-100">
+                                                        <span class="fw-medium text-truncate me-2">
+                                                            <i class="bi bi-people text-secondary me-1"></i>{{ $section->section_name }}
+                                                        </span>
+                                                        <span class="btn-group btn-group-sm flex-shrink-0">
+                                                            <a class="btn btn-primary att-link"
+                                                               data-href="{{ url('attendances/take?class_id='.$school_class->id.'&class_name='.urlencode($school_class->class_name).'&section_id='.$section->id.'&section_name='.urlencode($section->section_name)) }}">
+                                                                <i class="bi bi-pencil-square"></i> Take
+                                                            </a>
+                                                            <a class="btn btn-outline-secondary att-link"
+                                                               data-href="{{ url('attendances/view?class_id='.$school_class->id.'&class_name='.urlencode($school_class->class_name).'&section_id='.$section->id.'&section_name='.urlencode($section->section_name)) }}">
+                                                                <i class="bi bi-eye"></i> View
+                                                            </a>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> No classes available for the current session.
+                        </div>
+                    @endforelse
+
                 </div>
             </div>
             @include('layouts.footer')
         </div>
     </div>
 </div>
+
+<script>
+// Keep every Take/View link in sync with the chosen date.
+document.addEventListener('DOMContentLoaded', function () {
+    var dateInput = document.getElementById('attDate');
+    function applyDate() {
+        var d = dateInput.value;
+        document.querySelectorAll('.att-link').forEach(function (a) {
+            var base = a.getAttribute('data-href');
+            a.setAttribute('href', d ? base + '&date=' + encodeURIComponent(d) : base);
+        });
+    }
+    dateInput.addEventListener('change', applyDate);
+    applyDate();
+});
+</script>
 @endsection
