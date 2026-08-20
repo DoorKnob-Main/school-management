@@ -66,7 +66,7 @@
             @if($biometricEnabled)
                 @if(Auth::user()->isAdminOrSuperAdmin() || Auth::user()->effective_role == "teacher")
                 <li class="nav-item">
-                    <a type="button" href="#biometric-submenu" data-bs-toggle="collapse" class="d-flex nav-link {{ request()->is('biometric*')? 'active' : '' }}"><i class="bi bi-fingerprint text-primary"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline fw-bold text-primary">Biometric</span>
+                    <a type="button" href="#biometric-submenu" data-bs-toggle="collapse" class="d-flex nav-link {{ request()->is('biometric*')? 'active' : '' }}"><i class="bi bi-fingerprint"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline">Biometric</span>
                         <i class="ms-auto d-inline d-sm-none d-md-none d-xl-inline bi bi-chevron-down"></i>
                     </a>
                     <ul class="nav collapse {{ request()->is('biometric*')? 'show' : 'hide' }} bg-white" id="biometric-submenu">
@@ -194,7 +194,7 @@
 
             @if (Auth::user()->isSuperAdmin())
             <li class="nav-item border-top mt-2 pt-2">
-                <a class="nav-link text-primary {{ request()->is('settings*')? 'active' : '' }}" href="{{ route('settings.index') }}"><i class="bi bi-gear-fill"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline fw-bold">Settings</span></a>
+                <a class="nav-link {{ request()->is('settings*')? 'active' : '' }}" href="{{ route('settings.index') }}"><i class="bi bi-gear-fill"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Settings</span></a>
             </li>
             @endif
         </ul>

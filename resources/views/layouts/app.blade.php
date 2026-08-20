@@ -28,6 +28,8 @@
     @endif
 
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/bootstrap-icons-1.7.1/font/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
     <!-- Dynamic Theme Customizations -->
@@ -49,6 +51,94 @@
         }
         .card {
             border-radius: {{ setting('card_radius', '8px') }};
+        }
+
+        /* Sleek Dark/Blackish Sidebar & Submenu Styling */
+        .border-rt-e6 {
+            background-color: #ffffff;
+            border-right: 1px solid #e2e8f0 !important;
+        }
+
+        .nav-link {
+            color: #334155 !important;
+            font-weight: 500;
+            padding: 0.6rem 0.9rem;
+            border-radius: 6px;
+            margin: 2px 8px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .nav-link i, .nav-link .bi {
+            color: #1e293b !important;
+            font-size: 1.1rem;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .nav-link:hover {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+
+        .nav-link:hover i, .nav-link:hover .bi {
+            color: #000000 !important;
+        }
+
+        .nav-link.active {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        .nav-link.active i, .nav-link.active .bi, .nav-link.active span {
+            color: #ffffff !important;
+        }
+
+        /* Submenu Styling */
+        .nav.collapse {
+            background-color: #f8fafc !important;
+            border-left: 2px solid #cbd5e1;
+            margin-left: 1rem;
+            margin-right: 0.5rem;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            border-radius: 0 6px 6px 0;
+            padding: 4px 0;
+        }
+
+        .nav.collapse .nav-link {
+            color: #475569 !important;
+            font-size: 0.88rem;
+            padding: 0.45rem 0.8rem;
+            margin: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .nav.collapse .nav-link i, .nav.collapse .nav-link .bi {
+            color: #334155 !important;
+            font-size: 0.95rem;
+        }
+
+        .nav.collapse .nav-link:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        .nav.collapse .nav-link:hover i, .nav.collapse .nav-link:hover .bi {
+            color: #000000 !important;
+        }
+
+        .nav.collapse li[style*="font-weight:bold"] .nav-link,
+        .nav.collapse li[style*="font-weight: bold"] .nav-link,
+        .nav.collapse .nav-link.active {
+            background-color: #334155 !important;
+            color: #ffffff !important;
+        }
+
+        .nav.collapse li[style*="font-weight:bold"] .nav-link i,
+        .nav.collapse li[style*="font-weight: bold"] .nav-link i,
+        .nav.collapse .nav-link.active i {
+            color: #ffffff !important;
         }
         {!! setting('custom_css') !!}
     </style>
