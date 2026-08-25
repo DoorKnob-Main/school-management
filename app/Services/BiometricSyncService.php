@@ -134,16 +134,69 @@ class BiometricSyncService
             ->select('id', 'device_user_id', 'punch_time', 'verify_type', 'student_id')
             ->get()
             ->keyBy(function ($item) {
-                return $item->device_user_id . '_' . $item->punch_time;
-            });
+                $pt = $item->punch_time instanceof Carbon ? $item->punch_time->toDateTimeString() : Carbon::parse($item->punch_time)->toDateTimeString();
+                return $item->device_user_id . '_' . $pt . '_' . (string)$item->verify_type;
+            })
+            ->toArray();
 
         // Preload student user cache for fast fallback
         $allStudents = User::where('role', 'student')->pluck('id', 'id')->toArray();
 
-        $recordsToInsert = [];
+        // Self-heal legacy punch logs where device_user_id was saved as 0
+        $legacyZeroLogs = BiometricPunchLog::where('device_id', $device->id)
+            ->where('device_user_id', 0)
+            ->get();
+
+        foreach ($legacyZeroLogs as $zeroLog) {
+            if (!empty($zeroLog->raw_payload)) {
+                $payload = is_array($zeroLog->raw_payload) 
+                    ? $zeroLog->raw_payload 
+                    : (is_string($zeroLog->raw_payload) ? json_decode($zeroLog->raw_payload, true) : null);
+
+                if (is_array($payload)) {
+                    $recoveredRawUserId = $payload['user_id'] ?? null;
+                    $recoveredRawEnroll = $payload['raw_enroll_no'] ?? null;
+
+                    $recoveredId = 0;
+                    if (!empty($recoveredRawUserId) && (string)$recoveredRawUserId !== '0') {
+                        $recoveredId = (int)$recoveredRawUserId;
+                    } elseif (!empty($recoveredRawEnroll) && (string)$recoveredRawEnroll !== '0') {
+                        $recoveredId = (int)$recoveredRawEnroll;
+                    }
+
+                    if ($recoveredId > 0) {
+                        $pTimeStr = Carbon::parse($zeroLog->punch_time)->toDateTimeString();
+                        $vTypeStr = (string)($zeroLog->verify_type ?? '1');
+                        $healKey = $recoveredId . '_' . $pTimeStr . '_' . $vTypeStr;
+
+                        if (isset($existingPunches[$healKey])) {
+                            $zeroLog->delete();
+                        } else {
+                            $stId = $mappings[$recoveredId] ?? (isset($allStudents[$recoveredId]) ? $recoveredId : null);
+                            $zeroLog->update([
+                                'device_user_id' => $recoveredId,
+                                'student_id' => $stId ?: $zeroLog->student_id,
+                            ]);
+                            $existingPunches[$healKey] = true;
+                            $dateStr = Carbon::parse($zeroLog->punch_time)->toDateString();
+                            $affectedDates[$dateStr] = true;
+                        }
+                    }
+                }
+            }
+        }
 
         foreach ($rawLogs as $logItem) {
-            $deviceUserId = (int)($logItem['user_id'] ?? $logItem['raw_enroll_no'] ?? 0);
+            $rawUserId = $logItem['user_id'] ?? null;
+            $rawEnrollNo = $logItem['raw_enroll_no'] ?? null;
+
+            $deviceUserId = 0;
+            if (!empty($rawUserId) && (string)$rawUserId !== '0') {
+                $deviceUserId = (int)$rawUserId;
+            } elseif (!empty($rawEnrollNo) && (string)$rawEnrollNo !== '0') {
+                $deviceUserId = (int)$rawEnrollNo;
+            }
+
             $rawTimestamp = $logItem['timestamp'] ?? now()->toDateTimeString();
 
             try {
@@ -157,10 +210,10 @@ class BiometricSyncService
             $sensorNo = (int)($logItem['sensor_no'] ?? 1);
 
             // Resolve student ID
-            $studentId = $mappings[$deviceUserId] ?? null;
+            $studentId = ($deviceUserId > 0 && isset($mappings[$deviceUserId])) ? $mappings[$deviceUserId] : null;
 
             // Fallback: If not mapped explicitly, check if a student exists whose ID matches directly
-            if (!$studentId && isset($allStudents[$deviceUserId])) {
+            if (!$studentId && $deviceUserId > 0 && isset($allStudents[$deviceUserId])) {
                 $studentId = $deviceUserId;
                 // Auto-record mapping
                 BiometricDeviceUserMapping::updateOrCreate(
@@ -179,11 +232,12 @@ class BiometricSyncService
             }
 
             // Fast in-memory deduplication check
-            $lookupKey = $deviceUserId . '_' . $punchTime->toDateTimeString();
+            $lookupKey = $deviceUserId . '_' . $punchTime->toDateTimeString() . '_' . $verifyType;
             if (isset($existingPunches[$lookupKey])) {
                 $duplicates++;
                 continue;
             }
+            $existingPunches[$lookupKey] = true;
 
             $recordsToInsert[] = [
                 'device_id' => $device->id,

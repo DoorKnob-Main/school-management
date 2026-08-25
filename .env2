@@ -1,6 +1,6 @@
 APP_NAME=Unifiedtransform
 APP_ENV=local
-APP_KEY=base64:UkB1yDL1AWOnb3MdYIItf18xodvPW9waIq4XR+cnCWg=
+APP_KEY=base64:UcvfJblp4Cavqcopl8096kcJ0XXA9md0QL2y2yHN3fc=
 APP_DEBUG=true
 APP_URL=http://localhost:8000
 

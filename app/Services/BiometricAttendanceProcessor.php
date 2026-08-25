@@ -127,10 +127,20 @@ class BiometricAttendanceProcessor
 
         // Default calculations
         $firstPunch = $punches->first();
-        $lastPunch = $punches->count() > 1 ? $punches->last() : null;
+        $firstPunchTime = $firstPunch ? Carbon::parse($firstPunch->punch_time) : null;
+
+        // Filter last punch: must be at least 5 minutes after first punch to count as checkout
+        $validExitPunch = null;
+        if ($punches->count() > 1 && $firstPunchTime) {
+            $candidateLast = $punches->last();
+            $candidateLastTime = Carbon::parse($candidateLast->punch_time);
+            if ($firstPunchTime->diffInMinutes($candidateLastTime) >= 5) {
+                $validExitPunch = $candidateLast;
+            }
+        }
 
         $inTime = $firstPunch ? $firstPunch->punch_time : null;
-        $outTime = $lastPunch ? $lastPunch->punch_time : null;
+        $outTime = $validExitPunch ? $validExitPunch->punch_time : null;
 
         $lateMinutes = 0;
         $earlyLeaveMinutes = 0;
@@ -150,8 +160,6 @@ class BiometricAttendanceProcessor
             $leaveTime = Carbon::parse($dateStr . ' ' . ($timing['school_leave_time'] ?? '14:30:00'));
             $earlyThreshold = Carbon::parse($dateStr . ' ' . ($timing['early_leave_threshold'] ?? '14:15:00'));
 
-            $firstPunchTime = Carbon::parse($firstPunch->punch_time);
-
             if ($firstPunchTime->lte($presentUntil)) {
                 $status = 'present';
             } elseif ($firstPunchTime->lte($lateUntil)) {
@@ -163,14 +171,14 @@ class BiometricAttendanceProcessor
             }
 
             // Calculate checkout and early leaving
-            if ($lastPunch) {
-                $lastPunchTime = Carbon::parse($lastPunch->punch_time);
-                if ($lastPunchTime->lt($earlyThreshold)) {
+            if ($validExitPunch) {
+                $exitTime = Carbon::parse($validExitPunch->punch_time);
+                if ($exitTime->lt($earlyThreshold)) {
                     $isEarlyLeave = true;
-                    $earlyLeaveMinutes = max(0, $leaveTime->diffInMinutes($lastPunchTime));
+                    $earlyLeaveMinutes = max(0, $leaveTime->diffInMinutes($exitTime));
                 }
             } else {
-                // Only 1 punch: Check if school day is already over
+                // No valid exit punch yet: Check if school day is already over
                 $now = Carbon::now();
                 if ($dateObj->isPast() || $now->gt($leaveTime)) {
                     $missingCheckout = true;

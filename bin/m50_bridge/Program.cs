@@ -270,11 +270,16 @@ namespace M50DeviceTester
                     string sUserId = "";
                     try
                     {
-                        SBXPCDLL.GetLastBigUserId_AsString1(machineNo, out sUserId);
+                        SBXPCDLL.GetLastBigUserId_AsString1(machineNo, out sUserId, false);
                     }
                     catch { }
 
-                    string finalUserId = !string.IsNullOrEmpty(sUserId) ? sUserId : seno.ToString();
+                    bool isValidBigId = !string.IsNullOrWhiteSpace(sUserId) && 
+                                        sUserId.Trim() != "0" && 
+                                        sUserId.Trim() != "00000000" && 
+                                        sUserId.Trim() != "00";
+
+                    string finalUserId = isValidBigId ? sUserId.Trim() : seno.ToString();
                     string timestamp = string.Format("{0:D4}-{1:D2}-{2:D2} {3:D2}:{4:D2}:{5:D2}", yr, mon, day, hr, min, sec);
 
                     logs.Add(new Dictionary<string, object>

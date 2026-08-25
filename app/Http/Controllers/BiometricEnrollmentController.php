@@ -95,10 +95,20 @@ class BiometricEnrollmentController extends Controller
         );
 
         // Resolve any past unmapped punch logs for this device_user_id
-        BiometricPunchLog::where('device_id', $device->id)
+        $unmappedLogs = BiometricPunchLog::where('device_id', $device->id)
             ->where('device_user_id', $deviceUserId)
             ->whereNull('student_id')
-            ->update(['student_id' => $student->id]);
+            ->get();
+
+        $affectedDates = [];
+        foreach ($unmappedLogs as $log) {
+            $log->update(['student_id' => $student->id]);
+            $affectedDates[\Carbon\Carbon::parse($log->punch_time)->toDateString()] = true;
+        }
+
+        foreach (array_keys($affectedDates) as $date) {
+            app(\App\Services\BiometricAttendanceProcessor::class)->processDate($date);
+        }
 
         return redirect()->back()->with('success', "Student {$studentName} enrolled to {$device->name} with Machine User ID #{$deviceUserId}.");
     }
@@ -176,15 +186,23 @@ class BiometricEnrollmentController extends Controller
             ]
         );
 
-        // Update all unmapped logs
-        $updatedCount = BiometricPunchLog::where('device_id', $device->id)
+        // Update all unmapped logs and reprocess attendance for affected dates
+        $unmappedLogs = BiometricPunchLog::where('device_id', $device->id)
             ->where('device_user_id', $validated['device_user_id'])
             ->whereNull('student_id')
-            ->update(['student_id' => $student->id]);
+            ->get();
 
-        // Trigger attendance processor for any newly resolved punches
-        app(\App\Services\BiometricAttendanceProcessor::class)->processDate(now()->toDateString());
+        $affectedDates = [\Carbon\Carbon::today()->toDateString() => true];
+        foreach ($unmappedLogs as $log) {
+            $log->update(['student_id' => $student->id]);
+            $affectedDates[\Carbon\Carbon::parse($log->punch_time)->toDateString()] = true;
+        }
 
-        return redirect()->back()->with('success', "Mapped Machine User ID #{$validated['device_user_id']} to {$student->first_name} {$student->last_name}. {$updatedCount} punch records updated.");
+        $processor = app(\App\Services\BiometricAttendanceProcessor::class);
+        foreach (array_keys($affectedDates) as $date) {
+            $processor->processDate($date);
+        }
+
+        return redirect()->back()->with('success', "Mapped Machine User ID #{$validated['device_user_id']} to {$student->first_name} {$student->last_name}. " . count($unmappedLogs) . " punch records updated.");
     }
 }
