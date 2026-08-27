@@ -6,14 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RoutineStoreRequest;
 use App\Models\Routine;
 use Illuminate\Http\Request;
-use App\Traits\SchoolSession;
+use App\Traits\SchoolSession as SchoolSessionTrait;
 use App\Repositories\RoutineRepository;
 use App\Interfaces\SchoolClassInterface;
 use App\Interfaces\SchoolSessionInterface;
 
+use App\Models\SchoolClass;
+use App\Models\Section;
+use App\Models\SchoolSession;
+
 class RoutineController extends Controller
 {
-    use SchoolSession;
+    use SchoolSessionTrait;
     protected $schoolSessionRepository;
     protected $schoolClassRepository;
 
@@ -72,7 +76,7 @@ class RoutineController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \Illuminate\Http\Request  $routine
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function show(Request $request)
@@ -84,8 +88,18 @@ class RoutineController extends Controller
         $routines = $routineRepository->getAll($class_id, $section_id, $current_school_session_id);
         $routines = $routines->sortBy('weekday')->groupBy('weekday');
 
+        $school_class = SchoolClass::find($class_id);
+        $section = Section::find($section_id);
+        $session = SchoolSession::find($current_school_session_id);
+
         $data = [
-            'routines' => $routines
+            'routines'                  => $routines,
+            'school_class'              => $school_class,
+            'section'                   => $section,
+            'session'                   => $session,
+            'class_id'                  => $class_id,
+            'section_id'                => $section_id,
+            'current_school_session_id' => $current_school_session_id,
         ];
 
         return view('routines.show', $data);

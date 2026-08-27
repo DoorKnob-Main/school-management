@@ -99,7 +99,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attendances', [AttendanceController::class, 'store'])->name('attendances.store');
 
     // Classes and sections
-    Route::get('/classes', [SchoolClassController::class, 'index']);
+    Route::get('/classes', [SchoolClassController::class, 'index'])->name('class.index');
     Route::get('/class/edit/{id}', [SchoolClassController::class, 'edit'])->name('class.edit');
     Route::get('/sections', [SectionController::class, 'getByClassId'])->name('get.sections.courses.by.classId');
     Route::get('/section/edit/{id}', [SectionController::class, 'edit'])->name('section.edit');

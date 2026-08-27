@@ -44,4 +44,45 @@ class Routine extends Model
     public function course() {
         return $this->belongsTo(Course::class, 'course_id');
     }
+
+    /**
+     * Get the assigned teacher for this routine.
+     */
+    public function assignedTeacher() {
+        return $this->hasOne(AssignedTeacher::class, 'course_id', 'course_id')
+            ->where('session_id', $this->session_id)
+            ->where('class_id', $this->class_id)
+            ->where(function($q) {
+                $q->where('section_id', $this->section_id)
+                  ->orWhere('section_id', 0)
+                  ->orWhereNull('section_id');
+            });
+    }
+
+    /**
+     * Accessor for teacher model
+     */
+    public function getTeacherAttribute()
+    {
+        if ($this->relationLoaded('teacher')) {
+            return $this->getRelation('teacher');
+        }
+
+        if ($this->relationLoaded('assignedTeacher') && $this->assignedTeacher) {
+            return $this->assignedTeacher->teacher;
+        }
+
+        $assigned = AssignedTeacher::with('teacher')
+            ->where('session_id', $this->session_id)
+            ->where('course_id', $this->course_id)
+            ->where('class_id', $this->class_id)
+            ->where(function($q) {
+                $q->where('section_id', $this->section_id)
+                  ->orWhere('section_id', 0)
+                  ->orWhereNull('section_id');
+            })
+            ->first();
+
+        return $assigned ? $assigned->teacher : null;
+    }
 }
